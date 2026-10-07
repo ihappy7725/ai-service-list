@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>AI 툴 둘러보기 · AI ATLAS</title>
   <meta name="description" content="분야와 요금으로 AI 서비스를 걸러 보고, 장점·아쉬운 점·추천 용도까지 한 번에 확인하세요.">
-  <meta name="theme-color" content="#f5f9ff" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#0a1226" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#f5f9ff">
+  <meta name="color-scheme" content="only light">
   <link rel="icon" href="favicon.ico" sizes="any">
   <link rel="icon" type="image/png" href="img/logo/ai-atlas-logo.png">
   <link rel="apple-touch-icon" href="img/logo/ai-atlas-logo.png">
@@ -16,11 +16,11 @@
   <link rel="stylesheet" href="css/style.css">
   <script>
     document.documentElement.classList.add("js");
-    /* 화면 모드: 저장된 선택 → 없으면 기기 설정을 따름 (깜빡임 없도록 가장 먼저 적용) */
+    /* 화면 모드: 기본은 항상 라이트. 사용자가 직접 다크를 고른 경우에만 다크
+       (기기 설정·브라우저 자동 다크에 영향받지 않도록, 가장 먼저 적용) */
     (function () {
-      var t = null;
-      try { t = localStorage.getItem("ai-atlas-theme"); } catch (e) {}
-      if (!t) t = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      var t = "light";
+      try { if (localStorage.getItem("ai-atlas-theme") === "dark") t = "dark"; } catch (e) {}
       document.documentElement.dataset.theme = t;
     })();
   </script>

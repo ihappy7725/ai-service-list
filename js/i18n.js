@@ -996,10 +996,22 @@ function pick(obj) {
 /* 일본어·중국어 글꼴은 필요할 때만 불러오기 */
 
 /* 화면의 data-i18n 요소 전부 바꾸기 */
+/* 설명 문장: 문장이 끝나는 곳에서만 줄을 바꿔 의미 단위로 읽히게 하기
+   (넓은 화면에서 한 줄로 두고 싶은 곳은 CSS에서 .sbr을 숨김) */
+const LINE_TARGETS = ".section-sub, .tools-hero p, .cta p, .hero-sub, [data-lines]";
+function setLines(el, text) {
+  const esc = s => s.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const parts = text.split(/(?<=[.!?。！？])\s*(?=\S)/u).filter(Boolean);
+  const sep = /^(ja|zh)/.test(currentLang) ? "" : " ";
+  el.innerHTML = parts.map(esc).join(sep + '<br class="sbr">');
+}
+
 function applyI18n(root = document) {
   document.documentElement.lang = currentLang;
   root.querySelectorAll("[data-i18n]").forEach(el => {
-    el.textContent = t(el.dataset.i18n, el.dataset.i18nVars ? JSON.parse(el.dataset.i18nVars) : undefined);
+    const text = t(el.dataset.i18n, el.dataset.i18nVars ? JSON.parse(el.dataset.i18nVars) : undefined);
+    if (el.matches(LINE_TARGETS)) setLines(el, text);
+    else el.textContent = text;
   });
   root.querySelectorAll("[data-i18n-ph]").forEach(el => { el.placeholder = t(el.dataset.i18nPh); });
   root.querySelectorAll("[data-i18n-aria]").forEach(el => { el.setAttribute("aria-label", t(el.dataset.i18nAria)); });

@@ -305,8 +305,7 @@ function renderWhatsNew() {
 
 /* ---------- 언어가 바뀌면 다시 그리기 ---------- */
 function renderTexts() {
-  document.getElementById("heroSub").textContent =
-    t("hero.sub", { c: CATEGORIES.length, n: SERVICES.length });
+  setLines(document.getElementById("heroSub"), t("hero.sub", { c: CATEGORIES.length, n: SERVICES.length }));
   renderCategoryCards();
   renderSets();
   renderWhatsNew();
