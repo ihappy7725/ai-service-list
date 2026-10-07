@@ -1,16 +1,73 @@
 /* =========================================================
    AI ATLAS · AI 툴 페이지 동작
    - 1단 분야 칩 → 2단 하위 분류 칩 (덜 강조)
-   - 검색 (이름·소개·분야·추천 용도) + 조건 필터 (무료·한국어·웹·대표)
+   - 검색 (이름·소개·분야·추천 용도) + [필터] 버튼 → 펼침 패널 (요금·언어·사용 방식·정렬 등)
    - 카드 클릭: 공식 사이트 새 탭 / 자세히: 카드 안에서 펼치기
-   - 하트: 내 AI 툴(즐겨찾기) / 비교: 최대 3개 나란히 비교
+   - 하트: 내 AI 툴(즐겨찾기)
    - 주소: #automation, #automation/nocode, #my(내 AI 툴), #set-student(추천 세트)
    ========================================================= */
 
-const state = { view: "all", cat: "all", sub: "all", q: "", conds: {} };
+const F_DEFAULT = { price: "any", cheap: false, ko: false, kr: false, use: "any", star: false, fav: false };
+const state = { view: "all", cat: "all", sub: "all", q: "", f: { ...F_DEFAULT }, sort: "rec" };
 const openCards = new Set();
-const compare = [];             // 비교함 (서비스 키, 최대 3개)
-const COND_IDS = ["free", "ko", "web", "star"];
+let filterOpen = false;
+
+/* 필터 패널 구성 (type: one = 하나만 고르기, tog = 켜고 끄기) */
+const FILTER_GROUPS = [
+  { id: "price", title: "filter.g.price", items: [
+    { f: "price", v: "any",      label: "filter.any" },
+    { f: "price", v: "free",     label: "filter.price.free" },
+    { f: "price", v: "freemium", label: "filter.price.freemium" },
+    { f: "price", v: "paid",     label: "filter.price.paid" },
+    { f: "cheap", v: true,       label: "filter.cheap", tog: true }
+  ]},
+  { id: "lang", title: "filter.g.lang", items: [
+    { f: "ko", v: true, label: "filter.ko", tog: true },
+    { f: "kr", v: true, label: "filter.kr", tog: true }
+  ]},
+  { id: "use", title: "filter.g.use", items: [
+    { f: "use", v: "any",     label: "filter.any" },
+    { f: "use", v: "web",     label: "filter.use.web" },
+    { f: "use", v: "install", label: "filter.use.install" }
+  ]},
+  { id: "more", title: "filter.g.more", items: [
+    { f: "star", v: true, label: "filter.star", tog: true },
+    { f: "fav",  v: true, label: "filter.fav",  tog: true }
+  ]},
+  { id: "sort", title: "filter.g.sort", items: [
+    { f: "sort", v: "rec",  label: "sort.rec" },
+    { f: "sort", v: "free", label: "sort.free" },
+    { f: "sort", v: "name", label: "sort.name" }
+  ]}
+];
+
+/* 월 $10(₩15,000·€10) 이하 유료 플랜이 있는지 */
+function hasCheapPlan(s) {
+  return (s.plans || []).some(p => {
+    const price = p[1];
+    if (typeof price !== "string") return false;
+    const n = parseFloat(price.replace(/[^0-9.]/g, ""));
+    if (!n) return false;
+    if (price.includes("₩")) return n <= 15000;
+    return n <= 10;
+  });
+}
+
+function passFilters(s) {
+  const f = state.f;
+  if (f.price === "free" && s.price !== "free") return false;
+  if (f.price === "freemium" && s.price === "paid") return false;
+  if (f.price === "paid" && s.price !== "paid") return false;
+  if (f.cheap && !hasCheapPlan(s)) return false;
+  if (f.ko && !KO_FRIENDLY.has(s.name)) return false;
+  if (f.kr && !KOREAN_MADE.has(s.name)) return false;
+  if (f.use === "web" && NEEDS_INSTALL.has(s.name)) return false;
+  if (f.use === "install" && !NEEDS_INSTALL.has(s.name)) return false;
+  if (f.star && !s.star) return false;
+  if (f.fav && !Fav.has(svcKey(s))) return false;
+  return true;
+}
+const activeFilters = () => Object.keys(F_DEFAULT).filter(k => state.f[k] !== F_DEFAULT[k]);
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -49,7 +106,7 @@ function matches(s, { ignoreSub = false } = {}) {
     if (state.cat !== "all" && s.cat !== state.cat) return false;
     if (!ignoreSub && state.sub !== "all" && s.sub !== state.sub) return false;
   }
-  if (!passConditions(s, state.conds)) return false;
+  if (!passFilters(s)) return false;
   if (state.q) {
     const text = searchText(s);
     const words = state.q.toLowerCase().split(/\s+/).filter(Boolean);
@@ -80,24 +137,55 @@ function renderChips() {
     wrap.classList.add("is-open");
   }
 
-  // 조건 필터 (토글)
-  const on = COND_IDS.filter(id => state.conds[id]).length;
-  $("condChips").innerHTML = COND_IDS.map(id => `
-    <button type="button" class="cond" data-cond="${id}" aria-pressed="${!!state.conds[id]}">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>${t("cond." + id)}
-    </button>`).join("") +
-    (on ? `<button type="button" class="cond-reset" data-cond="reset">${t("cond.reset")}</button>` : "");
+  renderFilters();
+}
+
+/* ---------- 필터 버튼 · 패널 · 선택 태그 ---------- */
+const checkIcon = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>`;
+function itemOn(it) { return it.f === "sort" ? state.sort === it.v : state.f[it.f] === it.v; }
+
+function countResults() {
+  if (state.view === "my") return Fav.list().map(findSvc).filter(Boolean).filter(s => matches(s)).length;
+  if (state.view.startsWith("set:")) return setTools(getSet(state.view.slice(4))).filter(s => matches(s)).length;
+  return SERVICES.filter(s => matches(s)).length;
+}
+
+function renderFilters() {
+  const act = activeFilters();
+  const btn = $("filterBtn");
+  btn.setAttribute("aria-expanded", String(filterOpen));
+  btn.classList.toggle("has-active", act.length > 0);
+  btn.querySelector(".filter-count").textContent = act.length;
+  btn.querySelector(".filter-count").hidden = !act.length;
+  $("filterPanel").classList.toggle("is-open", filterOpen);
+  $("filterPanel").inert = !filterOpen;
+
+  $("filterBody").innerHTML = FILTER_GROUPS.map(g => `
+    <div class="fgroup fgroup--${g.id}" role="group" aria-label="${t(g.title)}">
+      <h3 class="fgroup__title">${t(g.title)}</h3>
+      <div class="fgroup__items">
+        ${g.items.map(it => `<button type="button" class="fopt${it.tog ? " fopt--tog" : ""}" data-f="${it.f}" data-v="${it.v}" aria-pressed="${itemOn(it)}">${it.tog ? checkIcon : ""}${t(it.label)}</button>`).join("")}
+      </div>
+    </div>`).join("");
+  $("filterResult").innerHTML = t("filter.result", { n: `<b>${countResults()}</b>` });
+  $("filterReset").disabled = !act.length && state.sort === "rec";
+
+  // 선택된 조건 태그 (패널을 닫아도 보이도록)
+  const label = k => {
+    for (const g of FILTER_GROUPS) for (const it of g.items) if (it.f === k && it.v === state.f[k]) return t(it.label);
+    return k;
+  };
+  $("filterTags").innerHTML = act.map(k => `<button type="button" class="ftag" data-clear="${k}">${label(k)}<span aria-hidden="true">×</span><span class="sr-only">${t("filter.remove")}</span></button>`).join("") +
+    (act.length > 1 ? `<button type="button" class="ftag-reset" data-clear="all">${t("filter.reset")}</button>` : "");
+  $("filterTags").hidden = !act.length;
 }
 
 /* ---------- 카드 그리기 ---------- */
-const cmpIcon = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4v16M17 4v16M4 8h6M14 16h6"/></svg>`;
-
 function cardHTML(s) {
   const cat = getCategory(s.cat), sub = getSub(s.cat, s.sub);
   const key = svcKey(s);
   const id = "d-" + s.name.replace(/[^a-z0-9]/gi, "").toLowerCase() + "-" + s.cat;
   const open = openCards.has(key);
-  const inCmp = compare.includes(key);
   const list = arr => arr.map(x => `<li>${esc(x)}</li>`).join("");
   const domain = s.url.replace(/^https?:\/\//, "").replace(/\/$/, "");
   return `
@@ -105,7 +193,6 @@ function cardHTML(s) {
     <a class="tool-link" href="${esc(s.url)}" target="_blank" rel="noopener noreferrer" aria-label="${esc(s.name)} · ${t("card.open")}"></a>
     <div class="tool-actions">
       ${favBtnHTML(s)}
-      <button type="button" class="icon-btn cmp-btn" data-cmp="${esc(key)}" aria-pressed="${inCmp}" aria-label="${t("cmp.toggle")}" title="${t("cmp.toggle")}">${cmpIcon}</button>
     </div>
     <div class="tool-head">
       ${logoHTML(s)}
@@ -147,8 +234,13 @@ function plansHTML(s) {
     <p class="plan-note">${t("plan.note")} · <a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${t("plan.link")} ↗</a></p></div>`;
 }
 
+const PRICE_ORDER = { free: 0, mix: 1, paid: 2 };
+const collator = new Intl.Collator(["ko", "en"]);
 function sortList(list) {
-  return list.slice().sort((a, b) => (b.star ? 1 : 0) - (a.star ? 1 : 0));
+  const arr = list.slice();
+  if (state.sort === "name") return arr.sort((a, b) => collator.compare(a.name, b.name));
+  if (state.sort === "free") return arr.sort((a, b) => (PRICE_ORDER[a.price] ?? 1) - (PRICE_ORDER[b.price] ?? 1) || (b.star ? 1 : 0) - (a.star ? 1 : 0));
+  return arr.sort((a, b) => (b.star ? 1 : 0) - (a.star ? 1 : 0));
 }
 
 /* ---------- 내 AI 툴 / 추천 세트 머리말 ---------- */
@@ -205,7 +297,7 @@ function renderGrid() {
         </div>`;
       return;
     }
-    html = list.map(cardHTML).join("");
+    html = sortList(list).map(cardHTML).join("");
   } else if (state.view.startsWith("set:")) {
     const set = getSet(state.view.slice(4));
     set.steps.forEach((st, i) => {
@@ -254,82 +346,13 @@ function render() {
   renderChips();
   renderBanner();
   renderGrid();
-  renderCompareTray();
 }
 
 function resetFilters() {
-  state.view = "all"; state.cat = "all"; state.sub = "all"; state.q = ""; state.conds = {};
+  state.view = "all"; state.cat = "all"; state.sub = "all"; state.q = ""; state.f = { ...F_DEFAULT }; state.sort = "rec";
   $("q").value = ""; $("qClear").hidden = true;
   writeHash();
   render();
-}
-
-/* ---------- 비교하기 ---------- */
-function toggleCompare(key) {
-  const i = compare.indexOf(key);
-  if (i >= 0) compare.splice(i, 1);
-  else {
-    if (compare.length >= 3) { showToast(t("cmp.max")); return; }
-    compare.push(key);
-  }
-  document.querySelectorAll(`.cmp-btn[data-cmp="${CSS.escape(key)}"]`).forEach(b => b.setAttribute("aria-pressed", String(compare.includes(key))));
-  renderCompareTray();
-}
-
-function renderCompareTray() {
-  const tray = $("cmpTray");
-  document.body.classList.toggle("has-tray", compare.length > 0);
-  if (!compare.length) { tray.hidden = true; return; }
-  tray.hidden = false;
-  tray.innerHTML = `
-    <span class="cmp-tray__label">${t("cmp.tray")} <b>${compare.length}/3</b></span>
-    <div class="cmp-tray__items">
-      ${compare.map(k => { const s = findSvc(k); return `
-        <span class="cmp-item">${logoHTML(s)}<span>${esc(s.name)}</span>
-          <button type="button" data-cmp-remove="${esc(k)}" aria-label="${t("cmp.removeOne")}">×</button></span>`; }).join("")}
-    </div>
-    <button type="button" class="btn btn-ghost btn-sm" data-cmp-act="clear">${t("cmp.clear")}</button>
-    <button type="button" class="btn btn-primary btn-sm" data-cmp-act="go">${t("cmp.go")}</button>`;
-}
-
-function openCompare() {
-  if (compare.length < 2) { showToast(t("cmp.need")); return; }
-  const list = compare.map(findSvc);
-  const ul = arr => `<ul>${arr.map(x => `<li>${esc(x)}</li>`).join("")}</ul>`;
-  const rows = [
-    ["cmp.row.cat", s => `${esc(pick(getCategory(s.cat).name))} › ${esc(pick(getSub(s.cat, s.sub).name))}`],
-    ["cmp.row.intro", s => esc(pick(s.intro))],
-    ["cmp.row.price", s => priceBadge(s.price)],
-    ["plan.title", s => `<ul class="plans">${plansRows(s)}</ul>`],
-    ["card.pros", s => ul(pick(s.pros))],
-    ["card.cons", s => ul(pick(s.cons))],
-    ["card.uses", s => ul(pick(s.uses))],
-    ["cond.ko", s => KO_FRIENDLY.has(s.name) ? `<span class="yes">✓ ${t("cmp.yes")}</span>` : `<span class="no">–</span>`],
-    ["cmp.row.web", s => NEEDS_INSTALL.has(s.name) ? `<span class="no">${t("cmp.webNo")}</span>` : `<span class="yes">✓ ${t("cmp.webYes")}</span>`]
-  ];
-  const modal = $("cmpModal");
-  modal.innerHTML = `
-    <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="cmpTitle">
-      <header class="modal-head">
-        <h2 id="cmpTitle">${t("cmp.title")}</h2>
-        <button type="button" class="chat-close" data-cmp-act="close" aria-label="${t("cmp.close")}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
-      </header>
-      <div class="cmp-table-wrap">
-        <table class="cmp-table" style="--cols:${list.length}">
-          <thead><tr><th></th>${list.map(s => `
-            <th><div class="cmp-col-head">${logoHTML(s)}<strong>${esc(s.name)}${s.star ? '<span class="star">★</span>' : ""}</strong>
-              <a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${t("chat.visit")} ↗</a></div></th>`).join("")}</tr></thead>
-          <tbody>${rows.map(([k, f]) => `<tr><th scope="row">${t(k)}</th>${list.map(s => `<td>${f(s)}</td>`).join("")}</tr>`).join("")}</tbody>
-        </table>
-      </div>
-    </div>`;
-  modal.hidden = false;
-  document.body.classList.add("modal-open");
-  modal.querySelector(".chat-close").focus();
-}
-function closeCompare() {
-  $("cmpModal").hidden = true;
-  document.body.classList.remove("modal-open");
 }
 
 /* ---------- 이벤트 ---------- */
@@ -352,11 +375,25 @@ function bindEvents() {
     writeHash();
     render();
   });
-  $("condChips").addEventListener("click", e => {
-    const b = e.target.closest("[data-cond]");
+  // 필터 버튼: 패널 펼치기/접기
+  $("filterBtn").addEventListener("click", () => { filterOpen = !filterOpen; renderFilters(); });
+  $("filterDone").addEventListener("click", () => { filterOpen = false; renderFilters(); $("filterBtn").focus(); });
+  $("filterReset").addEventListener("click", () => { state.f = { ...F_DEFAULT }; state.sort = "rec"; render(); });
+  $("filterBody").addEventListener("click", e => {
+    const b = e.target.closest("[data-f]");
     if (!b) return;
-    if (b.dataset.cond === "reset") state.conds = {};
-    else state.conds[b.dataset.cond] = !state.conds[b.dataset.cond];
+    const key = b.dataset.f, raw = b.dataset.v;
+    if (key === "sort") state.sort = raw;
+    else if (raw === "true") state.f[key] = !state.f[key];
+    else state.f[key] = raw;
+    render();
+  });
+  $("filterTags").addEventListener("click", e => {
+    const b = e.target.closest("[data-clear]");
+    if (!b) return;
+    const k = b.dataset.clear;
+    if (k === "all") state.f = { ...F_DEFAULT };
+    else state.f[k] = F_DEFAULT[k];
     render();
   });
 
@@ -384,18 +421,6 @@ function bindEvents() {
       open ? openCards.add(key) : openCards.delete(key);
       return;
     }
-    const cmp = e.target.closest(".cmp-btn");
-    if (cmp) { e.preventDefault(); toggleCompare(cmp.dataset.cmp); return; }
-    const rm = e.target.closest("[data-cmp-remove]");
-    if (rm) { toggleCompare(rm.dataset.cmpRemove); return; }
-    const act = e.target.closest("[data-cmp-act]");
-    if (act) {
-      const a = act.dataset.cmpAct;
-      if (a === "go") openCompare();
-      if (a === "close") closeCompare();
-      if (a === "clear") { compare.length = 0; document.querySelectorAll(".cmp-btn").forEach(b => b.setAttribute("aria-pressed", "false")); renderCompareTray(); }
-      return;
-    }
     const view = e.target.closest("[data-view]");
     if (view) { state.view = view.dataset.view; writeHash(); render(); window.scrollTo({ top: 0 }); return; }
     // 세트 경로의 로고를 누르면 해당 카드로 이동
@@ -407,11 +432,14 @@ function bindEvents() {
       if (card) { card.scrollIntoView({ behavior: "smooth", block: "center" }); card.classList.add("is-flash"); setTimeout(() => card.classList.remove("is-flash"), 1200); }
     }
   });
-  $("cmpModal").addEventListener("click", e => { if (e.target.id === "cmpModal") closeCompare(); });
-  document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("cmpModal").hidden) closeCompare(); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && filterOpen) { filterOpen = false; renderFilters(); } });
 
-  // 내 AI 툴에서 하트를 빼면 목록 갱신
-  document.addEventListener("favchange", () => { if (state.view === "my") { renderBanner(); renderGrid(); } });
+  // 하트를 바꾸면 내 AI 툴 / '내가 담은 툴만' 필터 갱신
+  document.addEventListener("favchange", () => {
+    if (state.view === "my") { renderBanner(); renderGrid(); }
+    else if (state.f.fav) renderGrid();
+    renderFilters();
+  });
 
   window.addEventListener("hashchange", () => { readHash(); render(); });
   document.addEventListener("langchange", render);

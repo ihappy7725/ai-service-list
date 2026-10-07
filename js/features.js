@@ -74,7 +74,7 @@ function showToast(msg) {
 /* ---------- 2. 조건 정보 ---------- */
 // 한국어로 쓰기 좋은 서비스 (한국어 화면 또는 한국어 입력·결과 품질이 좋음)
 const KO_FRIENDLY = new Set([
-  "ChatGPT", "Claude", "Gemini", "Microsoft Copilot", "Grok", "뤼튼", "클로바X", "에이닷", "Poe",
+  "ChatGPT", "Claude", "Gemini", "Microsoft Copilot", "Grok", "뤼튼", "에이닷", "Poe",
   "Perplexity", "Google AI 모드", "ChatGPT 검색", "네이버 AI 브리핑", "Felo", "ChatGPT 딥 리서치", "Gemini Deep Research",
   "NotebookLM", "Claude 리서치", "Perplexity 딥 리서치", "라이너",
   "바른한글 맞춤법 검사기", "DeepL 번역", "파파고", "Google 번역", "Immersive Translate", "플리토", "XL8",
@@ -86,14 +86,21 @@ const KO_FRIENDLY = new Set([
   "Notion AI", "Copilot in Word", "Gemini in Google Docs", "릴리스AI (Lilys AI)", "한컴어시스턴트",
   "클로바노트", "다글로", "티로 (Tiro)", "에이닷 노트", "Notta", "Zoom AI Companion", "Teams Copilot",
   "ChatGPT for Excel & Sheets", "Copilot in Excel", "Claude for Excel", "Gemini in Sheets",
-  "ChatGPT 에이전트", "Gemini Agent", "Genspark", "ChatGPT Atlas", "Perplexity Comet", "Microsoft 365 Copilot 에이전트"
+  "Gemini Agent", "Genspark", "Perplexity Comet", "Microsoft 365 Copilot 에이전트"
 ]);
 // 설치가 필요한 서비스 (프로그램·앱·확장 프로그램·기기·직접 설치)
 const NEEDS_INSTALL = new Set([
   "LM Studio", "Ollama", "Whisper", "AudioCraft (Meta)", "Stable Diffusion", "Cursor", "Windsurf", "Kiro", "Google Antigravity",
   "JetBrains AI (Junie)", "Cline", "Claude Code", "Topaz Photo", "Topaz Video", "iZotope RX", "NVIDIA Broadcast", "Filmora",
   "Premiere Pro 생성형 확장", "Photoshop 생성형 채우기", "Cascadeur", "Krisp", "Wispr Flow", "Granola", "Plaud", "Dia",
-  "Opera Neon", "ChatGPT Atlas", "Perplexity Comet", "Browser Use", "Twistly", "Claude in Chrome", "Tactiq", "Bardeen"
+  "Opera Neon", "Perplexity Comet", "Browser Use", "Twistly", "Claude in Chrome", "Tactiq", "Bardeen"
+]);
+
+// 국내(한국) 회사가 만든 서비스
+const KOREAN_MADE = new Set([
+  "뤼튼", "에이닷", "네이버 AI 브리핑", "라이너", "바른한글 맞춤법 검사기", "파파고", "플리토", "XL8",
+  "미리캔버스 AI", "망고보드", "Vrew", "AI Studios (딥브레인AI)", "타입캐스트", "클로바더빙", "페르소 AI",
+  "아임웹", "릴리스AI (Lilys AI)", "한컴어시스턴트", "클로바노트", "다글로", "티로 (Tiro)", "에이닷 노트"
 ]);
 
 const CONDITIONS = [

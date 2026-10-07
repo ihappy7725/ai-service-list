@@ -9,17 +9,17 @@
 const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 /* ---------- 1. 떠다니는 아이콘 ---------- */
-// x, y: 위치(%), xs, ys: 휴대폰에서의 위치, s: 크기, depth: 마우스 반응 정도
+// x, y: 위치(%), xs, ys: 휴대폰에서의 위치, s: 크기, depth: 마우스 반응 정도, pop: 첫 화면에서 "뽁" 나타나는 순서
 // (떠다니는 궤적은 i18n.js의 startFloaters가 아이콘마다 다르게 계산)
 const HERO_FLOATERS = [
-  { img: "hero-robot",   x: "5%",  y: "15%", xs: "4%",  ys: "11%", s: "210px", depth: 26 },
-  { img: "hero-chat",    x: "75%", y: "11%", xs: "70%", ys: "9%",  s: "180px", depth: 18 },
-  { img: "hero-laptop",  x: "79%", y: "54%", xs: "64%", ys: "77%", s: "240px", depth: 30 },
-  { img: "hero-sparkle", x: "19%", y: "62%", xs: "8%",  ys: "79%", s: "135px", depth: 14 },
-  { img: "hero-brain",   x: "63%", y: "71%", s: "145px", depth: 20, cls: "hide-sm" },
-  { img: "hero-cursor",  x: "31%", y: "9%",  s: "110px", depth: 10, cls: "hide-sm", o: .9 },
-  { img: "hero-cube",    x: "1%",  y: "57%", xs: "38%", ys: "86%", s: "160px", depth: 22 },
-  { img: "hero-orb",     x: "57%", y: "8%",  s: "120px", depth: 12, cls: "hide-sm", o: .85 }
+  { img: "hero-robot",   x: "5%",  y: "15%", xs: "4%",  ys: "11%", s: "210px", depth: 26, pop: 0 },
+  { img: "hero-chat",    x: "75%", y: "11%", xs: "70%", ys: "9%",  s: "180px", depth: 18, pop: 3 },
+  { img: "hero-laptop",  x: "79%", y: "54%", xs: "64%", ys: "77%", s: "240px", depth: 30, pop: 5 },
+  { img: "hero-sparkle", x: "19%", y: "62%", xs: "8%",  ys: "79%", s: "135px", depth: 14, pop: 2 },
+  { img: "hero-brain",   x: "63%", y: "71%", s: "145px", depth: 20, pop: 6, cls: "hide-sm" },
+  { img: "hero-cursor",  x: "31%", y: "9%",  s: "110px", depth: 10, pop: 1, cls: "hide-sm", o: .9 },
+  { img: "hero-cube",    x: "1%",  y: "57%", xs: "38%", ys: "86%", s: "160px", depth: 22, pop: 4 },
+  { img: "hero-orb",     x: "57%", y: "8%",  s: "120px", depth: 12, pop: 7, cls: "hide-sm", o: .85 }
 ];
 const CTA_FLOATERS = [
   { img: "hero-chat",    x: "5%",  y: "16%", s: "110px", depth: 0, o: .9 },
@@ -32,7 +32,7 @@ const CTA_FLOATERS = [
 function renderFloaters(el, list) {
   if (!el) return;
   el.innerHTML = list.map((f, i) => `
-    <div class="floater ${f.cls || ""}" style="--x:${f.x};--y:${f.y};--xs:${f.xs || f.x};--ys:${f.ys || f.y};--s:${f.s};--depth:${f.depth};--o:${f.o ?? 1}">
+    <div class="floater ${f.cls || ""}" style="--x:${f.x};--y:${f.y};--xs:${f.xs || f.x};--ys:${f.ys || f.y};--s:${f.s};--depth:${f.depth};--o:${f.o ?? 1};--pop:${f.pop ?? i}">
       <img src="img/3d/${f.img}.png" alt="" loading="${i < 4 ? "eager" : "lazy"}">
     </div>`).join("");
 }

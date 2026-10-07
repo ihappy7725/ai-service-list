@@ -203,12 +203,63 @@ function priceBadge(price) {
 }
 
 /* 로고: 공식 사이트 아이콘을 불러오고, 실패하면 첫 글자 배지로 */
+/* ---------- 로고 ----------
+   여러 아이콘 서버를 차례로 시도하고, 기본 지구본(16px 이하)이 오면 다음 후보로 넘어가요.
+   모든 후보가 실패하면 이름 첫 글자 배지를 그대로 보여 줘요. */
+const LOGO_DOMAIN = {
+  "Copilot in PowerPoint": "copilot.microsoft.com", "Copilot in Word": "copilot.microsoft.com", "Copilot in Excel": "copilot.microsoft.com",
+  "Teams Copilot": "teams.microsoft.com", "Microsoft 365 Copilot 에이전트": "copilot.microsoft.com", "Copilot Studio": "copilotstudio.microsoft.com",
+  "Power BI Copilot": "powerbi.com", "Microsoft Loop": "loop.microsoft.com", "Power Automate": "powerautomate.microsoft.com",
+  "Gemini in Google Slides": "gemini.google.com", "Gemini in Google Docs": "gemini.google.com", "Gemini in Sheets": "gemini.google.com",
+  "Google Meet 회의록 (Gemini)": "meet.google.com", "Google Workspace Flows": "workspace.google.com", "Gemini Agent": "gemini.google.com",
+  "Chrome 자동 브라우징 (Gemini)": "chrome.google.com", "Google Flow (Veo)": "labs.google", "Google Opal": "opal.google",
+  "Google AI 모드": "google.com", "Google Stitch": "stitch.withgoogle.com", "Google Antigravity": "antigravity.google",
+  "YouTube 자동 더빙": "youtube.com", "Whisper": "openai.com", "OpenAI Codex": "openai.com",
+  "ChatGPT 이미지": "chatgpt.com", "ChatGPT 검색": "chatgpt.com", "ChatGPT 딥 리서치": "chatgpt.com", "ChatGPT for Excel & Sheets": "chatgpt.com",
+  "AudioCraft (Meta)": "meta.com", "Meta AI": "meta.ai", "Dreamina": "dreamina.capcut.com",
+  "클로바더빙": "clovadubbing.naver.com", "클로바노트": "clovanote.naver.com", "네이버 AI 브리핑": "naver.com", "파파고": "papago.naver.com",
+  "Hookpad": "hooktheory.com", "Bing Copilot 검색": "bing.com", "Bing Image Creator": "bing.com",
+  "Premiere Pro 생성형 확장": "adobe.com", "Photoshop 생성형 채우기": "adobe.com", "Adobe Express": "express.adobe.com",
+  "Adobe Acrobat AI 어시스턴트": "acrobat.adobe.com", "Adobe Podcast Enhance": "podcast.adobe.com", "Adobe Firefly 효과음": "firefly.adobe.com",
+  "Confluence (Atlassian Rovo)": "atlassian.com", "Zapier Agents": "zapier.com", "ElevenLabs Music": "elevenlabs.io", "ElevenLabs 효과음": "elevenlabs.io",
+  "Perplexity Comet": "comet.perplexity.ai", "Autodesk Flow Studio": "autodesk.com", "NVIDIA Broadcast": "nvidia.com",
+  "Hostinger 웹사이트 빌더": "hostinger.com", "Slack AI": "slack.com", "Box AI": "box.com", "Tableau Agent": "tableau.com",
+  "Zoom AI Companion": "zoom.com", "Dropbox Dash": "dropbox.com"
+};
+const hostOf = url => url.replace(/^https?:\/\//, "").split("/")[0].replace(/^www\./, "");
+function rootOf(host) {
+  const p = host.split(".");
+  if (p.length <= 2) return host;
+  const two = p.slice(-2).join(".");
+  return /^(co|com|or|ne|go|ac)\.[a-z]{2}$/.test(two) ? p.slice(-3).join(".") : two;
+}
+function logoCandidates(s) {
+  const host = hostOf(s.url);
+  const hosts = [...new Set([LOGO_DOMAIN[s.name], host, rootOf(host)].filter(Boolean))];
+  const list = [];
+  hosts.forEach(h => {
+    list.push(`https://www.google.com/s2/favicons?domain=${h}&sz=128`);
+    list.push(`https://icons.duckduckgo.com/ip3/${h}.ico`);
+  });
+  list.push(`https://${host}/apple-touch-icon.png`);
+  return list;
+}
+/* 이미지가 실패하거나 너무 작으면(기본 지구본) 다음 후보로 */
+function logoNext(img, failed) {
+  const list = img.dataset.c.split(" ");
+  if (!failed && (img.naturalWidth > 16 || img.dataset.final)) { img.classList.add("is-ok"); return; }
+  if (!failed && !img.dataset.small) img.dataset.small = img.src;      // 작은 아이콘이라도 기억해 두기
+  const i = +(img.dataset.i || 0) + 1;
+  if (i < list.length) { img.dataset.i = i; img.src = list[i]; return; }
+  if (img.dataset.small && !img.dataset.final) { img.dataset.final = 1; img.src = img.dataset.small; return; }
+  img.remove();                                                         // 글자 배지만 남김
+}
 function logoHTML(s) {
-  const domain = s.url.replace(/^https?:\/\//, "").split("/")[0];
   let h = 0;
   for (const ch of s.name) h = (h * 31 + ch.codePointAt(0)) % 360;
   const letter = (s.name.match(/[0-9A-Za-z가-힣]/) || ["?"])[0].toUpperCase();
-  return `<span class="logo" style="--h:${h}" aria-hidden="true">${letter}<img src="https://www.google.com/s2/favicons?domain=${domain}&sz=128" alt="" loading="lazy" onerror="this.remove()"></span>`;
+  const c = logoCandidates(s);
+  return `<span class="logo" style="--h:${h}" aria-hidden="true">${letter}<img src="${c[0]}" data-c="${c.join(" ")}" alt="" loading="lazy" referrerpolicy="no-referrer" onload="logoNext(this)" onerror="logoNext(this,1)"></span>`;
 }
 
 /* =========================================================
@@ -283,12 +334,6 @@ S("뤼튼", "chatbot", "korean", "https://wrtn.ai", "free", true, {
   en: ["A Korean AI portal that offers several AI models for free",["Core features are free to use","Korean interface and features made for Korean users"],["The newest advanced features can arrive later than on the original services"],["Organize ideas for an assignment or presentation","Draft a blog post for free"]],
   ja: ["複数のAIモデルを無料で使える韓国発のAIポータル",["主な機能を無料で使える","韓国語の画面と韓国ユーザー向けの機能が多い"],["最新の高度な機能は本家サービスより遅れることがある"],["課題や発表のアイデア整理","ブログ記事の下書きを無料で作成"]],
   zh: ["可免费使用多种AI模型的韩国AI门户",["主要功能可免费使用","韩语界面和面向韩国用户的功能多"],["最新高级功能有时比原版服务上线更晚"],["整理作业或演讲的思路","免费起草博客文章"]]
-}, [["@free","$0"]]);
-S("클로바X", "chatbot", "korean", "https://clova-x.naver.com", "free", false, {
-  ko: ["네이버 서비스와 연결되는 한국어 AI",["한국 문화와 최신 국내 정보에 강함","네이버 쇼핑·지도 등과 연결"],["글로벌 최상위 모델보다 복잡한 추론은 약함"],["국내 맛집·여행 정보 질문","한국어 공문 표현 다듬기"]],
-  en: ["Naver's Korean-language AI connected to Naver services",["Strong on Korean culture and local information","Connects to Naver Shopping, Maps and more"],["Weaker at complex reasoning than top global models"],["Ask about restaurants and travel in Korea","Polish formal Korean writing"]],
-  ja: ["NAVERのサービスとつながる韓国語AI",["韓国の文化や国内情報に強い","NAVERショッピングや地図などと連携"],["世界トップのモデルより複雑な推論は弱い"],["韓国のグルメや旅行情報を質問","韓国語の公文書の表現を整える"]],
-  zh: ["与NAVER服务相连的韩语AI",["熟悉韩国文化和本地最新信息","与NAVER购物、地图等相连"],["复杂推理不如全球顶级模型"],["询问韩国美食和旅行信息","润色韩语公文表达"]]
 }, [["@free","$0"]]);
 S("에이닷", "chatbot", "korean", "https://adot.ai", "free", false, {
   ko: ["SKT의 통화·일정 연동 AI 비서",["통화 녹음 요약 등 휴대폰 생활과 연결된 기능","여러 AI 모델을 무료로 사용"],["일부 기능은 통신사나 기기 환경에 따라 다름"],["중요한 통화 내용 요약해서 다시 보기","일정과 할 일 대화로 정리"]],
@@ -1976,12 +2021,6 @@ S("Gumloop", "automation", "nocode", "https://gumloop.com", "mix", false, {
   ja: ["AI処理とデータ作業をノードでつなぐAI中心の自動化ビルダー",["Webスクレイピングや AI分析をドラッグするだけ","AIワークフローづくりが直感的"],["利用量が増えると費用負担が大きくなる"],["競合サイトの情報を集めて要約","見込み客リストをAIで分類してシートに保存"]],
   zh: ["用节点连接AI处理和数据任务的AI优先自动化构建器",["拖放即可加入网页抓取和AI分析步骤","搭建AI工作流很直观"],["用量增加后费用压力变大"],["收集竞争对手网站信息并总结","用AI分类潜在客户名单并存入表格"]]
 }, [["@free","$0"],["Solo","$37","mo"]]);
-S("Relay.app", "automation", "nocode", "https://relay.app", "mix", false, {
-  ko: ["자동화 중간에 사람이 확인·승인하는 단계를 넣을 수 있는 도구",["AI가 만든 결과를 사람이 확인 후 진행","팀 협업형 자동화에 적합"],["연동 앱 수가 대형 서비스보다 적음"],["AI가 쓴 답장 초안을 확인 후 발송","신규 고객 등록 시 담당자 승인 거치기"]],
-  en: ["Automation that lets a person review or approve steps along the way",["People check AI output before the flow continues","Good for team-based automation"],["Fewer integrations than the biggest platforms"],["Review an AI-written reply before it's sent","Route new customer sign-ups through a manager's approval"]],
-  ja: ["自動化の途中に人の確認・承認ステップを入れられるツール",["AIの結果を人が確認してから進められる","チームで使う自動化に向く"],["連携アプリ数は大手サービスより少ない"],["AIが書いた返信案を確認してから送信","新規顧客登録時に担当者の承認を挟む"]],
-  zh: ["可在自动化中途加入人工确认和审批步骤的工具",["AI生成的结果经人工确认后再继续","适合团队协作式自动化"],["可连接应用少于大型平台"],["确认AI写的回复草稿后再发送","新客户注册时经负责人审批"]]
-}, [["@free","$0"],["@paid",null]]);
 S("IFTTT", "automation", "nocode", "https://ifttt.com", "mix", false, {
   ko: ["'이것이 일어나면 저것을 하라' 규칙으로 앱과 스마트홈을 연결하는 서비스",["설정이 매우 간단함","스마트홈 기기 연동이 많음"],["복잡한 업무 자동화에는 부족함"],["비 예보가 있으면 휴대폰 알림 받기","SNS에 올린 사진을 클라우드에 자동 백업"]],
   en: ["Connects apps and smart-home devices with 'if this, then that' rules",["Very simple to set up","Lots of smart-home integrations"],["Too limited for complex business automation"],["Get a phone alert when rain is forecast","Back up photos you post to the cloud automatically"]],
@@ -2020,12 +2059,6 @@ S("Google Workspace Flows", "automation", "nocode", "https://workspace.google.co
 }, [["Workspace Business Standard","$14","user"],["Workspace Business Plus","$22","user"]]);
 
 /* ---------- 자동화·AI 에이전트 › 범용 AI 에이전트 ---------- */
-S("ChatGPT 에이전트", "automation", "agents", "https://chatgpt.com", "paid", true, {
-  ko: ["웹 탐색, 양식 작성, 파일 생성까지 대신 해주는 ChatGPT의 에이전트 모드",["여러 사이트를 오가며 조사하고 결과물까지 만듦","중요한 행동 전에는 확인을 요청함"],["유료 요금제가 필요하고 시간이 오래 걸리는 작업이 있음"],["여행 일정 조사 후 표로 정리","경쟁사 가격 조사해 스프레드시트 만들기"]],
-  en: ["ChatGPT's agent mode that browses, fills forms and creates files for you",["Researches across sites and produces finished output","Asks before taking important actions"],["Needs a paid plan, and some tasks take a while"],["Research a trip and organize it into a table","Compare competitor prices in a spreadsheet"]],
-  ja: ["Web閲覧、フォーム入力、ファイル作成まで代わりにやってくれるChatGPTのエージェントモード",["複数のサイトを行き来して調べ、成果物まで作る","重要な操作の前には確認を求める"],["有料プランが必要で、時間がかかる作業もある"],["旅行の日程を調べて表に整理","競合の価格を調べてスプレッドシートに"]],
-  zh: ["可代你浏览网页、填写表单、生成文件的ChatGPT智能体模式",["在多个网站间调研并产出成品","执行重要操作前会征求确认"],["需要付费方案，部分任务耗时较长"],["调研旅行行程并整理成表格","调查竞品价格并做成表格"]]
-}, [["Plus","$20","mo"],["Pro","$200","mo"]]);
 S("Claude", "automation", "agents", "https://claude.ai", "mix", true, {
   ko: ["파일과 앱을 다루며 문서·분석 작업을 끝까지 해내는 Anthropic의 AI",["긴 작업을 단계별로 계획하고 완성된 파일로 전달","연결한 업무 앱의 데이터로 작업"],["고급 에이전트 기능은 유료 요금제 중심"],["자료 조사 후 보고서 문서 완성","여러 데이터 파일 분석해 대시보드 만들기"]],
   en: ["Anthropic's AI that works with files and apps to finish document and analysis tasks",["Plans long tasks step by step and hands back finished files","Works with data from connected work apps"],["Advanced agent features are mostly on paid plans"],["Research a topic and deliver a finished report","Analyze several data files and build a dashboard"]],
@@ -2076,12 +2109,6 @@ S("Microsoft 365 Copilot 에이전트", "automation", "agents", "https://microso
 }, [["Microsoft 365 Copilot","$30","user"]]);
 
 /* ---------- 자동화·AI 에이전트 › AI 브라우저 ---------- */
-S("ChatGPT Atlas", "automation", "browser", "https://chatgpt.com/atlas", "mix", true, {
-  ko: ["ChatGPT가 들어 있는 브라우저, 에이전트 모드로 웹 작업을 대신 처리",["보고 있는 페이지 내용을 바로 질문","에이전트 모드로 클릭·입력까지 대행"],["에이전트 모드는 유료 요금제에서 사용"],["여러 쇼핑몰 가격 비교","웹 양식 작성 맡기기"]],
-  en: ["A browser with ChatGPT built in; agent mode handles web tasks for you",["Ask about the page you're viewing","Agent mode clicks and types on your behalf"],["Agent mode needs a paid plan"],["Compare prices across shops","Have it fill out a web form"]],
-  ja: ["ChatGPTが入ったブラウザ。エージェントモードでWeb作業を代わりに処理",["見ているページの内容をすぐ質問","エージェントモードでクリックや入力まで代行"],["エージェントモードは有料プランで利用"],["複数のショップで価格比較","Webフォームの入力を任せる"]],
-  zh: ["内置ChatGPT的浏览器，智能体模式可代办网页任务",["可直接就正在浏览的页面提问","智能体模式可代为点击和输入"],["智能体模式需付费方案"],["比较多家商店价格","交给它填写网页表单"]]
-}, [["@free","$0"],["Plus","$20","mo"]]);
 S("Perplexity Comet", "automation", "browser", "https://perplexity.ai/comet", "free", true, {
   ko: ["검색에 강한 퍼플렉시티의 AI 브라우저, 2026년 3월부터 무료",["탭 내용을 이해하고 요약·비교","검색과 웹 작업을 한 화면에서"],["고급 에이전트 기능은 사용량 제한이 있음"],["열어 둔 여러 기사 한 번에 요약","제품 리뷰 페이지 비교"]],
   en: ["Perplexity's search-focused AI browser, free since March 2026",["Understands, summarizes and compares your tabs","Search and web tasks in one window"],["Advanced agent features have usage limits"],["Summarize several open articles at once","Compare product review pages"]],
@@ -2144,12 +2171,6 @@ S("Copilot Studio", "automation", "builder", "https://microsoft.com/microsoft-co
   ja: ["企業向けのカスタムエージェントを作るMicrosoftのツール。コンピューター操作機能付き",["会社のデータとセキュリティポリシーの中でエージェントを運用","画面を直接操作するコンピューター利用機能"],["従量課金のため費用管理が必要"],["社内ITヘルプデスクのエージェント","レガシーソフトへの入力を自動化"]],
   zh: ["打造企业定制智能体的微软工具，含电脑操作功能",["在公司数据和安全策略范围内运行智能体","可直接操作屏幕的电脑使用功能"],["按用量计费，需要管控成本"],["内部IT服务台智能体","自动化旧系统录入"]]
 }, [["Credits","$200","mo"]]);
-S("OpenAI Agent Builder", "automation", "builder", "https://platform.openai.com", "paid", false, {
-  ko: ["시각적 캔버스에서 에이전트 흐름을 설계하는 OpenAI의 개발 도구",["노드를 연결해 에이전트 흐름 설계","만든 에이전트를 웹사이트에 바로 연결"],["API 사용량만큼 비용이 들고 개발 지식이 필요함"],["고객 지원 에이전트 프로토타입","사내 업무 도우미 앱 개발"]],
-  en: ["OpenAI's developer tool for designing agent flows on a visual canvas",["Design agent flows by linking nodes","Plug finished agents straight into a website"],["Billed by API usage and needs developer skills"],["Prototype a customer support agent","Build an internal work assistant app"]],
-  ja: ["視覚的なキャンバスでエージェントのフローを設計するOpenAIの開発ツール",["ノードをつないでエージェントのフローを設計","作ったエージェントをWebサイトにすぐ組み込み"],["API利用量に応じて費用がかかり、開発知識が必要"],["カスタマーサポートエージェントの試作","社内業務アシスタントアプリの開発"]],
-  zh: ["在可视化画布上设计智能体流程的OpenAI开发工具",["连接节点设计智能体流程","做好的智能体可直接接入网站"],["按API用量计费，需要开发知识"],["客服智能体原型","开发内部工作助手应用"]]
-}, [["API","payg"]]);
 S("Google Opal", "automation", "builder", "https://opal.google", "free", false, {
   ko: ["말로 설명하면 작은 AI 앱을 만들어 주는 구글의 실험 서비스",["코딩 없이 몇 분 만에 AI 미니 앱 완성","무료로 사용 가능"],["실험 서비스라 기능과 제공 지역이 바뀔 수 있음"],["자기소개서 첨삭 미니 앱","수업용 퀴즈 생성 앱"]],
   en: ["Google's experimental service that builds small AI apps from a description",["A mini AI app in minutes, no code","Free to use"],["As an experiment, features and availability may change"],["A mini app that critiques cover letters","A quiz generator for class"]],
@@ -2168,12 +2189,6 @@ S("Dust", "automation", "builder", "https://dust.tt", "paid", false, {
   ja: ["社内ナレッジをつなぎ、Slackなどで使う業務エージェントを作るプラットフォーム",["Notion・ドライブ・Slackなど社内資料を連携","チームごとに必要なエージェントを簡単に作成"],["無料体験後は有料"],["Slackで社内規程の質問に答えるボット","営業資料を探してくれるエージェント"]],
   zh: ["连接公司知识、在Slack等处使用的工作智能体平台",["连接Notion、云端硬盘、Slack等内部资料","各团队可轻松打造所需智能体"],["免费试用后收费"],["在Slack中回答公司政策问题的机器人","帮忙查找销售资料的智能体"]]
 }, [["Pro","$29","user"]]);
-S("Flowise", "automation", "builder", "https://flowiseai.com", "mix", false, {
-  ko: ["드래그 앤 드롭으로 AI 에이전트를 만드는 오픈소스 빌더",["오픈소스라 직접 설치해 무료 사용","블록을 연결하는 직관적인 화면"],["직접 운영하려면 서버 관리가 필요함"],["문서 기반 Q&A 챗봇","AI 워크플로 프로토타입"]],
-  en: ["An open-source builder for AI agents with drag and drop",["Open source, free when self-hosted","Intuitive block-linking interface"],["Running it yourself needs server management"],["A document-based Q&A chatbot","Prototype an AI workflow"]],
-  ja: ["ドラッグ&ドロップでAIエージェントを作るオープンソースビルダー",["オープンソースなので自分で導入して無料で使える","ブロックをつなぐ直感的な画面"],["自分で運用するにはサーバー管理が必要"],["文書ベースのQ&Aチャットボット","AIワークフローの試作"]],
-  zh: ["拖放即可搭建AI智能体的开源构建器",["开源，可自行部署免费使用","连接积木块的直观界面"],["自行运营需要管理服务器"],["基于文档的问答机器人","AI工作流原型"]]
-}, [["@selfhost","$0"],["Cloud",null]]);
 S("Langflow", "automation", "builder", "https://langflow.org", "mix", false, {
   ko: ["AI 워크플로와 에이전트를 시각적으로 설계하는 오픈소스 도구",["다양한 AI 모델과 데이터베이스 연결","만든 흐름을 API로 배포"],["입문자에게는 용어가 어렵게 느껴질 수 있음"],["사내 검색 챗봇 설계","여러 AI 단계를 거치는 문서 처리 흐름"]],
   en: ["An open-source tool for designing AI workflows and agents visually",["Connects many AI models and databases","Deploy flows as APIs"],["Terminology can feel hard for beginners"],["Design an internal search chatbot","A document pipeline with several AI steps"]],

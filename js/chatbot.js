@@ -19,9 +19,13 @@ function chatBuild() {
   const root = document.createElement("div");
   root.className = "chat-root";
   root.innerHTML = `
-    <button type="button" class="chat-launcher" aria-expanded="false" aria-controls="chatPanel">
-      <img src="${AVATAR}" alt="">
-      <span class="chat-launcher__label" data-i18n="chat.open"></span>
+    <button type="button" class="chat-launcher" aria-expanded="false" aria-controls="chatPanel" data-i18n-title="chat.drag">
+      <span class="chat-launcher__avatar"><img src="${AVATAR}" alt="" draggable="false"></span>
+      <span class="chat-launcher__text">
+        <span class="chat-launcher__label" data-i18n="chat.open"></span>
+        <span class="chat-launcher__sub" data-i18n="chat.openSub"></span>
+      </span>
+      <span class="chat-launcher__grip" aria-hidden="true"></span>
     </button>
     <section class="chat-panel" id="chatPanel" role="dialog" aria-modal="false" aria-labelledby="chatTitle" hidden>
       <header class="chat-head">
@@ -51,7 +55,11 @@ function chatBuild() {
   };
   applyI18n(root);
 
-  Chat.el.launcher.addEventListener("click", () => chatToggle(!Chat.open));
+  Chat.el.launcher.addEventListener("click", e => {
+    if (Chat.dragged) { Chat.dragged = false; e.preventDefault(); return; }   // 끌어서 옮긴 뒤에는 열지 않음
+    chatToggle(!Chat.open);
+  });
+  chatDraggable();
   root.querySelector(".chat-close").addEventListener("click", () => chatToggle(false));
   root.querySelector('[data-act="quiz"]').addEventListener("click", quizStart);
   document.addEventListener("keydown", e => { if (e.key === "Escape" && Chat.open) chatToggle(false); });
@@ -79,9 +87,97 @@ function chatToggle(open) {
   Chat.el.launcher.setAttribute("aria-expanded", String(open));
   document.body.classList.toggle("chat-open", open);
   if (open) {
+    chatPlacePanel();
     if (!Chat.el.body.children.length) chatHello();
     setTimeout(() => Chat.el.input.focus(), 50);
   }
+}
+
+/* ---------- 드래그로 위치 옮기기 ----------
+   - 런처: 끌어서 원하는 곳에 두면 위치를 기억 (오른쪽·아래 기준 거리로 저장)
+   - 대화창: 머리 부분을 끌어서 옮기기 (데스크톱) */
+const CHAT_POS_KEY = "ai-atlas-chat-pos";
+const chatSmall = () => window.matchMedia("(max-width: 640px)").matches;
+const chatClamp = (v, a, b) => Math.min(Math.max(v, a), Math.max(a, b));
+
+function chatApplyPos() {
+  const l = Chat.el.launcher;
+  let pos = null;
+  try { pos = JSON.parse(localStorage.getItem(CHAT_POS_KEY)); } catch (e) {}
+  if (!pos) { l.style.right = l.style.bottom = ""; return; }
+  const w = l.offsetWidth, h = l.offsetHeight;
+  l.style.right = chatClamp(pos.r, 8, innerWidth - w - 8) + "px";
+  l.style.bottom = chatClamp(pos.b, 8, innerHeight - h - 8) + "px";
+}
+
+function dragHelper(handle, target, { onMove, onEnd, skip }) {
+  let sx, sy, rect, moved = false, id = null;
+  const move = e => {
+    if (id !== e.pointerId) return;
+    const dx = e.clientX - sx, dy = e.clientY - sy;
+    if (!moved && Math.hypot(dx, dy) < 6) return;
+    if (!moved) { moved = true; target.classList.add("is-dragging"); }
+    e.preventDefault();
+    onMove(rect, dx, dy);
+  };
+  const end = e => {
+    if (id !== e.pointerId) return;
+    id = null;
+    window.removeEventListener("pointermove", move);
+    window.removeEventListener("pointerup", end);
+    window.removeEventListener("pointercancel", end);
+    if (moved) { target.classList.remove("is-dragging"); onEnd && onEnd(); }
+  };
+  handle.addEventListener("pointerdown", e => {
+    if (e.button !== 0 || (skip && skip(e))) return;
+    id = e.pointerId; sx = e.clientX; sy = e.clientY; moved = false;
+    rect = target.getBoundingClientRect();
+    window.addEventListener("pointermove", move, { passive: false });
+    window.addEventListener("pointerup", end);
+    window.addEventListener("pointercancel", end);
+  });
+  handle.addEventListener("dragstart", e => e.preventDefault());
+}
+
+function chatDraggable() {
+  const l = Chat.el.launcher, p = Chat.el.panel;
+  chatApplyPos();
+  dragHelper(l, l, {
+    onMove(rect, dx, dy) {
+      const x = chatClamp(rect.left + dx, 8, innerWidth - rect.width - 8);
+      const y = chatClamp(rect.top + dy, 8, innerHeight - rect.height - 8);
+      l.style.right = (innerWidth - x - rect.width) + "px";
+      l.style.bottom = (innerHeight - y - rect.height) + "px";
+      Chat.dragged = true;
+    },
+    onEnd() {
+      const r = l.getBoundingClientRect();
+      try { localStorage.setItem(CHAT_POS_KEY, JSON.stringify({ r: innerWidth - r.right, b: innerHeight - r.bottom })); } catch (e) {}
+      setTimeout(() => { Chat.dragged = false; }, 0);
+    }
+  });
+  // 대화창 머리를 끌어서 옮기기 (버튼 위에서는 무시)
+  dragHelper(p.querySelector(".chat-head"), p, {
+    skip: e => chatSmall() || e.target.closest("button"),
+    onMove(rect, dx, dy) {
+      p.style.left = chatClamp(rect.left + dx, 8, innerWidth - rect.width - 8) + "px";
+      p.style.top = chatClamp(rect.top + dy, 8, innerHeight - rect.height - 8) + "px";
+      p.style.right = p.style.bottom = "auto";
+    }
+  });
+  window.addEventListener("resize", () => { chatApplyPos(); if (Chat.open) chatPlacePanel(); });
+}
+
+/* 대화창을 런처 근처에 열기 (화면 밖으로 나가지 않게) */
+function chatPlacePanel() {
+  const p = Chat.el.panel;
+  if (chatSmall()) { p.style.left = p.style.top = p.style.right = p.style.bottom = ""; return; }
+  const r = Chat.el.launcher.getBoundingClientRect();
+  const w = p.offsetWidth, h = p.offsetHeight;
+  const left = r.left + r.width / 2 > innerWidth / 2 ? r.right - w : r.left;
+  p.style.left = chatClamp(left, 12, innerWidth - w - 12) + "px";
+  p.style.top = chatClamp(r.bottom - h, 12, innerHeight - h - 12) + "px";
+  p.style.right = p.style.bottom = "auto";
 }
 
 /* ---------- 말풍선 ---------- */

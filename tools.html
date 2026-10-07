@@ -31,7 +31,7 @@
         <a href="index.html#trust" data-i18n="nav.trust">리서치 기준</a>
       </nav>
       <div class="header-actions">
-        <a class="lang-btn my-btn" href="tools.html#my">
+        <a class="pill-btn my-btn" href="tools.html#my">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-7.5-4.6-9.6-9.2C.9 7.9 3.1 4.5 6.6 4.5c2.1 0 3.6 1.2 5.4 3.2 1.8-2 3.3-3.2 5.4-3.2 3.5 0 5.7 3.4 4.2 6.8-2.1 4.6-9.6 9.2-9.6 9.2z"/></svg>
           <span class="my-label" data-i18n="nav.my">내 AI 툴</span>
           <span class="my-count" hidden>0</span>
@@ -63,18 +63,35 @@
     </div>
   </section>
 
-  <!-- ===== 검색 · 필터 (상단 고정) ===== -->
+  <!-- ===== 검색 · 필터 ===== -->
   <div class="controls">
     <div class="container">
       <div class="controls-row">
         <div class="search-row">
-        <div class="search" role="search">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
-          <label for="q" class="sr-only" data-i18n="search.ph"></label>
-          <input id="q" type="search" autocomplete="off" data-i18n-ph="search.ph">
-          <button type="button" class="search-clear" id="qClear" hidden data-i18n-aria="search.clear">×</button>
+          <div class="search" role="search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+            <label for="q" class="sr-only" data-i18n="search.ph"></label>
+            <input id="q" type="search" autocomplete="off" data-i18n-ph="search.ph">
+            <button type="button" class="search-clear" id="qClear" hidden data-i18n-aria="search.clear">×</button>
+          </div>
+          <button type="button" class="filter-btn" id="filterBtn" aria-expanded="false" aria-controls="filterPanel">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>
+            <span data-i18n="filter.btn">필터</span>
+            <span class="filter-count" hidden>0</span>
+          </button>
         </div>
-        <div class="conds" id="condChips" role="group" data-i18n-aria="cond.label"></div>
+        <div class="filter-tags" id="filterTags" hidden></div>
+        <div class="filter-panel" id="filterPanel">
+          <div>
+            <div class="filter-panel__inner">
+              <div class="filter-body" id="filterBody"></div>
+              <div class="filter-foot">
+                <span class="filter-result" id="filterResult"></span>
+                <button type="button" class="filter-reset" id="filterReset" data-i18n="filter.reset">초기화</button>
+                <button type="button" class="btn btn-primary btn-sm" id="filterDone" data-i18n="filter.done">결과 보기</button>
+              </div>
+            </div>
+          </div>
         </div>
         <div class="chips" id="catChips" role="group" data-i18n-aria="filter.cat"></div>
       </div>
@@ -89,10 +106,6 @@
     <section class="view-banner" id="viewBanner" hidden></section>
     <div class="grid" id="grid"></div>
   </main>
-
-  <!-- 비교함 / 비교표 -->
-  <div class="cmp-tray" id="cmpTray" hidden></div>
-  <div class="modal" id="cmpModal" hidden></div>
 
   <footer class="site-footer">
     <div class="container">
