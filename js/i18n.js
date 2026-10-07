@@ -874,18 +874,6 @@ function pick(obj) {
 }
 
 /* 일본어·중국어 글꼴은 필요할 때만 불러오기 */
-function loadLangFont(lang) {
-  const fonts = {
-    ja: "https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;800&display=swap",
-    zh: "https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;800&display=swap"
-  };
-  if (!fonts[lang] || document.getElementById("font-" + lang)) return;
-  const link = document.createElement("link");
-  link.id = "font-" + lang;
-  link.rel = "stylesheet";
-  link.href = fonts[lang];
-  document.head.appendChild(link);
-}
 
 /* 화면의 data-i18n 요소 전부 바꾸기 */
 function applyI18n(root = document) {
@@ -909,7 +897,6 @@ function setLang(lang) {
   if (!I18N[lang]) return;
   currentLang = lang;
   try { localStorage.setItem(LANG_KEY, lang); } catch (e) {}
-  loadLangFont(lang);
   applyI18n();
   document.dispatchEvent(new CustomEvent("langchange", { detail: { lang } }));
 }
@@ -995,7 +982,6 @@ function startFloaters() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  loadLangFont(currentLang);
   initHeader();
   applyI18n();
   setTimeout(startFloaters, 0); // 페이지별 스크립트가 아이콘을 그린 다음에 시작

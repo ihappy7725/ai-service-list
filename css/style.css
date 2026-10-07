@@ -26,7 +26,8 @@
   --paid-bg: #ffeee4;  --paid-fg: #b14d17;
 
   /* 글꼴 */
-  --font: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", system-ui, sans-serif;
+  /* 본고딕(Noto Sans CJK): 한·중·일·영을 같은 디자인으로 만든 다국어 폰트. 언어마다 글자 모양만 그 나라 표준에 맞춘 버전을 씀 */
+  --font: "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
 
   /* 크기 */
   --header-h: 72px;
@@ -38,8 +39,8 @@
   color-scheme: light;
 }
 
-html:lang(ja) { --font: "Pretendard Variable", "Noto Sans JP", "Hiragino Sans", "Yu Gothic", system-ui, sans-serif; }
-html:lang(zh) { --font: "Pretendard Variable", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif; }
+html:lang(ja) { --font: "Noto Sans JP", "Hiragino Sans", "Yu Gothic", system-ui, sans-serif; }
+html:lang(zh) { --font: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif; }
 
 *, *::before, *::after { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
@@ -165,7 +166,7 @@ html, body { overflow-x: clip; }
     linear-gradient(180deg, #ffffff 0%, #eef6ff 55%, #dcecff 100%);
 }
 .hero::after { /* 아래쪽 부드러운 곡선 */
-  content: ""; position: absolute; left: -10%; right: -10%; bottom: -1px; height: 120px;
+  content: ""; position: absolute; left: -10%; right: -10%; bottom: -1px; height: 76px;
   background: var(--bg); border-radius: 50% 50% 0 0 / 100% 100% 0 0;
 }
 .hero-content { position: relative; z-index: 3; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 22px; padding-inline: 16px; }
@@ -178,7 +179,8 @@ html, body { overflow-x: clip; }
 .hero-title { font-size: clamp(40px, 6.6vw, 88px); line-height: 1.12; font-weight: 800; letter-spacing: -.035em; text-wrap: balance; }
 .hero-title span { display: block; }
 .hero-title .grad { background: linear-gradient(100deg, var(--blue-2), var(--blue) 45%, var(--blue-deep)); -webkit-background-clip: text; background-clip: text; color: transparent; }
-.hero-sub { font-size: clamp(16px, 1.6vw, 20px); color: var(--ink-2); max-width: 34em; }
+.hero-sub { font-size: clamp(16px, 1.45vw, 20px); color: var(--ink-2); max-width: 34em; }
+@media (min-width: 820px) { .hero-sub { max-width: none; white-space: nowrap; } }   /* 넓은 화면에서는 한 줄로 */
 .hero-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 6px; }
 
 /* 떠다니는 3D 아이콘 */
