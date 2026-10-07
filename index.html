@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>AI ATLAS · 세상의 모든 AI 툴, 한곳에서</title>
+  <meta name="description" content="10개 분야의 AI 서비스를 검색하고 비교하고 바로 써보세요. 분야별로 꼭 알아야 할 AI 툴 지도, AI ATLAS.">
+  <meta property="og:title" content="AI ATLAS · 세상의 모든 AI 툴, 한곳에서">
+  <meta property="og:description" content="10개 분야의 AI 서비스를 검색하고 비교하고 바로 써보세요.">
+  <meta property="og:image" content="img/logo/ai-atlas-logo.png">
+  <meta name="theme-color" content="#1f74f0">
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" href="img/logo/ai-atlas-logo.png">
+  <link rel="apple-touch-icon" href="img/logo/ai-atlas-logo.png">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <script>document.documentElement.classList.add("js");</script>
+</head>
+<body data-title-key="meta.title.home">
+
+  <!-- ===== 상단바 ===== -->
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="index.html" aria-label="AI ATLAS 홈">
+        <img src="img/logo/ai-atlas-logo.png" alt="" width="38" height="38">
+        <span class="brand-name"><b>AI</b> ATLAS</span>
+      </a>
+      <nav class="main-nav" aria-label="주 메뉴">
+        <a href="tools.html" data-i18n="nav.tools">AI 툴 목록</a>
+        <a href="#categories" data-i18n="nav.categories">분야 소개</a>
+        <a href="#features" data-i18n="nav.features">기능</a>
+        <a href="#trust" data-i18n="nav.trust">리서치 기준</a>
+      </nav>
+      <div class="header-actions">
+        <div class="lang">
+          <button type="button" class="lang-btn" aria-haspopup="true" aria-expanded="false" data-i18n-aria="lang.label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>
+            <span class="lang-current">KO</span>
+          </button>
+          <ul class="lang-menu" role="menu" hidden></ul>
+        </div>
+        <a class="btn btn-primary btn-sm" href="tools.html" data-i18n="btn.enter">입장하기</a>
+        <button type="button" class="menu-btn" aria-expanded="false" data-i18n-aria="nav.menu"><span></span></button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- ===== 1. 히어로 ===== -->
+    <section class="hero" id="top">
+      <div class="floaters" id="heroFloaters" aria-hidden="true"></div>
+      <div class="hero-content">
+        <span class="hero-eyebrow" data-i18n="hero.eyebrow">분야별 AI 툴 지도</span>
+        <h1 class="hero-title">
+          <span data-i18n="hero.title1">세상의 모든 AI 툴,</span>
+          <span class="grad" data-i18n="hero.title2">한곳에서</span>
+        </h1>
+        <p class="hero-sub" id="heroSub">10개 분야의 AI 서비스를 검색하고, 비교하고, 바로 써보세요.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="tools.html">
+            <span data-i18n="btn.enter">입장하기</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </a>
+          <a class="btn btn-ghost" href="#categories" data-i18n="btn.browse">분야 둘러보기</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 2. 분야 카드 (반원 궤적) ===== -->
+    <section class="cat-section" id="categories" aria-labelledby="catTitle">
+      <div class="cat-stage">
+        <div class="cat-head section-head">
+          <span class="eyebrow" data-i18n="cat.eyebrow">10 CATEGORIES</span>
+          <h2 class="section-title" id="catTitle" data-i18n="cat.title">분야별로 골라보세요</h2>
+          <p class="section-sub" data-i18n="cat.sub">스크롤하면 분야 카드가 차례로 넘어와요.</p>
+        </div>
+        <div class="cat-orbit" id="catOrbit"></div>
+        <div class="cat-progress" aria-hidden="true">
+          <span id="catIndex">01 / 10</span>
+          <span class="cat-progress__bar"><i id="catBar"></i></span>
+          <span class="cat-progress__name" id="catName"></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 3. 기능 소개 01~08 ===== -->
+    <section class="features container" id="features" aria-labelledby="featTitle">
+      <div class="section-head reveal">
+        <span class="eyebrow" data-i18n="feat.eyebrow">HOW TO READ</span>
+        <h2 class="section-title" id="featTitle" data-i18n="feat.title">카드 한 장에 담은 8가지 정보</h2>
+        <p class="section-sub" data-i18n="feat.sub"></p>
+      </div>
+      <div class="feat-list" id="featList"></div>
+    </section>
+
+    <!-- ===== 4. 숫자 ===== -->
+    <section class="stats container" aria-label="AI ATLAS in numbers">
+      <div class="stats-grid">
+        <div class="stat reveal"><span class="stat-num"><span data-count="services">0</span><sup>+</sup></span><span class="stat-label" data-i18n="stats.services">AI 서비스</span></div>
+        <div class="stat reveal"><span class="stat-num"><span data-count="categories">0</span></span><span class="stat-label" data-i18n="stats.categories">분야</span></div>
+        <div class="stat reveal"><span class="stat-num"><span data-count="subs">0</span></span><span class="stat-label" data-i18n="stats.subs">하위 분류</span></div>
+        <div class="stat reveal"><span class="stat-num"><span data-count="langs">0</span></span><span class="stat-label" data-i18n="stats.langs">지원 언어</span></div>
+      </div>
+      <p class="stats-date" data-i18n="stats.date">2026년 10월 기준</p>
+    </section>
+
+    <!-- ===== 5. 리서치 기준 ===== -->
+    <section class="trust container" id="trust" aria-labelledby="trustTitle">
+      <div class="section-head reveal">
+        <span class="eyebrow" data-i18n="trust.eyebrow">OUR STANDARD</span>
+        <h2 class="section-title" id="trustTitle" data-i18n="trust.title">믿고 볼 수 있는 리스트</h2>
+      </div>
+      <div class="trust-grid">
+        <article class="trust-card reveal"><span class="trust-idx">01</span><h3 data-i18n="trust.1.title"></h3><p data-i18n="trust.1.body"></p></article>
+        <article class="trust-card reveal"><span class="trust-idx">02</span><h3 data-i18n="trust.2.title"></h3><p data-i18n="trust.2.body"></p></article>
+        <article class="trust-card reveal"><span class="trust-idx">03</span><h3 data-i18n="trust.3.title"></h3><p data-i18n="trust.3.body"></p></article>
+      </div>
+    </section>
+
+    <!-- ===== 6. CTA ===== -->
+    <section class="cta">
+      <div class="floaters" id="ctaFloaters" aria-hidden="true"></div>
+      <div class="container">
+        <span class="eyebrow" data-i18n="cta.eyebrow">START NOW</span>
+        <h2 data-i18n="cta.title">나에게 맞는 AI를 지금 찾아보세요</h2>
+        <p data-i18n="cta.sub"></p>
+        <a class="btn btn-white" href="tools.html" data-i18n="btn.enter">입장하기</a>
+      </div>
+    </section>
+  </main>
+
+  <!-- ===== 푸터 ===== -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-about">
+          <a class="brand" href="index.html"><img src="img/logo/ai-atlas-logo.png" alt="" width="38" height="38"><span class="brand-name"><b>AI</b> ATLAS</span></a>
+          <p data-i18n="footer.about"></p>
+        </div>
+        <div>
+          <h3 data-i18n="footer.menu">바로가기</h3>
+          <ul>
+            <li><a href="tools.html" data-i18n="nav.tools">AI 툴 목록</a></li>
+            <li><a href="#categories" data-i18n="nav.categories">분야 소개</a></li>
+            <li><a href="#features" data-i18n="nav.features">기능</a></li>
+            <li><a href="#trust" data-i18n="nav.trust">리서치 기준</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3 data-i18n="footer.info">안내</h3>
+          <ul>
+            <li data-i18n="footer.note1"></li>
+            <li data-i18n="footer.note2"></li>
+          </ul>
+        </div>
+      </div>
+      <p class="footer-bottom">© 2026 AI ATLAS</p>
+    </div>
+  </footer>
+
+  <script src="js/services.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/script.js"></script>
+</body>
+</html>

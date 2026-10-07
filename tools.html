@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>AI 툴 둘러보기 · AI ATLAS</title>
+  <meta name="description" content="분야와 요금으로 AI 서비스를 걸러 보고, 장점·아쉬운 점·추천 용도까지 한 번에 확인하세요.">
+  <meta name="theme-color" content="#1f74f0">
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" href="img/logo/ai-atlas-logo.png">
+  <link rel="apple-touch-icon" href="img/logo/ai-atlas-logo.png">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <script>document.documentElement.classList.add("js");</script>
+</head>
+<body data-title-key="meta.title.tools">
+
+  <!-- ===== 상단바 ===== -->
+  <header class="site-header is-scrolled">
+    <div class="container header-inner">
+      <a class="brand" href="index.html" aria-label="AI ATLAS 홈">
+        <img src="img/logo/ai-atlas-logo.png" alt="" width="38" height="38">
+        <span class="brand-name"><b>AI</b> ATLAS</span>
+      </a>
+      <nav class="main-nav" aria-label="주 메뉴">
+        <a href="tools.html" aria-current="page" data-i18n="nav.tools">AI 툴 목록</a>
+        <a href="index.html#categories" data-i18n="nav.categories">분야 소개</a>
+        <a href="index.html#features" data-i18n="nav.features">기능</a>
+        <a href="index.html#trust" data-i18n="nav.trust">리서치 기준</a>
+      </nav>
+      <div class="header-actions">
+        <div class="lang">
+          <button type="button" class="lang-btn" aria-haspopup="true" aria-expanded="false" data-i18n-aria="lang.label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>
+            <span class="lang-current">KO</span>
+          </button>
+          <ul class="lang-menu" role="menu" hidden></ul>
+        </div>
+        <a class="btn btn-ghost btn-sm" href="index.html" data-i18n="btn.home">홈으로</a>
+        <button type="button" class="menu-btn" aria-expanded="false" data-i18n-aria="nav.menu"><span></span></button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== 페이지 머리 ===== -->
+  <section class="tools-hero">
+    <div class="floaters" aria-hidden="true">
+      <div class="floater hide-sm" style="--x:80%;--y:24%;--s:120px;--depth:0;--dur:6.8s;--rot:8deg"><img src="img/3d/hero-robot.png" alt=""></div>
+      <div class="floater hide-sm" style="--x:91%;--y:58%;--s:72px;--depth:0;--dur:5.6s;--delay:-2s;--rot:-10deg;--o:.85"><img src="img/3d/hero-sparkle.png" alt=""></div>
+      <div class="floater hide-sm" style="--x:70%;--y:62%;--s:64px;--depth:0;--dur:6.2s;--delay:-3s;--rot:6deg;--o:.75"><img src="img/3d/hero-orb.png" alt=""></div>
+    </div>
+    <div class="container">
+      <span class="eyebrow" data-i18n="tools.eyebrow">AI TOOLS</span>
+      <h1 data-i18n="tools.title">AI 툴 둘러보기</h1>
+      <p data-i18n="tools.sub"></p>
+    </div>
+  </section>
+
+  <!-- ===== 검색 · 필터 (상단 고정) ===== -->
+  <div class="controls">
+    <div class="container">
+      <div class="controls-row">
+        <div class="search" role="search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+          <label for="q" class="sr-only" data-i18n="search.ph"></label>
+          <input id="q" type="search" autocomplete="off" data-i18n-ph="search.ph">
+          <button type="button" class="search-clear" id="qClear" hidden data-i18n-aria="search.clear">×</button>
+        </div>
+        <div class="chips" id="catChips" role="group" data-i18n-aria="filter.cat"></div>
+      </div>
+      <div class="subchips-wrap" id="subWrap">
+        <div><div class="subchips" id="subChips" role="group" data-i18n-aria="filter.sub"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 카드 목록 ===== -->
+  <main class="tools-main container">
+    <div class="grid" id="grid"></div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-about">
+          <a class="brand" href="index.html"><img src="img/logo/ai-atlas-logo.png" alt="" width="38" height="38"><span class="brand-name"><b>AI</b> ATLAS</span></a>
+          <p data-i18n="footer.about"></p>
+        </div>
+        <div>
+          <h3 data-i18n="footer.menu">바로가기</h3>
+          <ul>
+            <li><a href="index.html" data-i18n="btn.home">홈으로</a></li>
+            <li><a href="index.html#categories" data-i18n="nav.categories">분야 소개</a></li>
+            <li><a href="index.html#features" data-i18n="nav.features">기능</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3 data-i18n="footer.info">안내</h3>
+          <ul>
+            <li data-i18n="footer.note1"></li>
+            <li data-i18n="footer.note2"></li>
+          </ul>
+        </div>
+      </div>
+      <p class="footer-bottom">© 2026 AI ATLAS</p>
+    </div>
+  </footer>
+
+  <script src="js/services.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/tools.js"></script>
+</body>
+</html>
