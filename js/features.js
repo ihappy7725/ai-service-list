@@ -295,3 +295,84 @@ function recommend({ text = "", cat, sub, conds = {}, limit = 3 } = {}) {
 }
 
 document.addEventListener("DOMContentLoaded", updateFavCount);
+
+/* =========================================================
+   5. 업데이트 노트 (새로 추가 · 최근 정리)
+   - 가장 최근 업데이트에서 추가된 툴에는 NEW 배지가 붙어요.
+   - 다음 업데이트 때 맨 앞에 새 항목을 넣으면 됩니다.
+   ========================================================= */
+const UPDATES = [
+  {
+    date: "2026-10-07",
+    added: [
+      "Google Antigravity", "Kiro", "Higgsfield", "Hailuo AI", "Luma Dream Machine", "Krea", "FLUX", "Google Stitch",
+      "Wispr Flow", "Mureka", "Producer.ai (구 Riffusion)", "Base44", "v0", "Hedra", "Qwen Chat", "Kimi", "Undermind", "Immersive Translate"
+    ],
+    removed: [
+      { name: "ChatGPT Atlas", ended: "2026-08" },
+      { name: "ChatGPT 에이전트", ended: "2026-08" },
+      { name: "Flowise", ended: "2026-08" },
+      { name: "Relay.app", ended: "2026-09" },
+      { name: "OpenAI Agent Builder", ended: "2026-11" },
+      { name: "클로바X", ended: "2026-04" }
+    ]
+  }
+];
+const LATEST = UPDATES[0];
+const NEW_SET = new Set(LATEST.added.filter(n => findByName(n)));
+const isNew = s => NEW_SET.has(s.name);
+const newTools = () => LATEST.added.map(findByName).filter(Boolean);
+
+/* =========================================================
+   6. 공유 링크
+   - 카드 하나: tools.html#tool-gamma
+   - 내 AI 툴 목록: tools.html#my=gamma,notion-ai,...
+   ========================================================= */
+const _nameCount = SERVICES.reduce((m, s) => (m[s.name] = (m[s.name] || 0) + 1, m), {});
+function svcSlug(s) {
+  const base = s.name.toLowerCase().replace(/\(.*?\)/g, " ").trim()
+    .replace(/[^a-z0-9가-힣]+/g, "-").replace(/^-+|-+$/g, "");
+  return _nameCount[s.name] > 1 ? base + "-" + s.cat : base;
+}
+const findBySlug = slug => SERVICES.find(s => svcSlug(s) === slug);
+const toolsURL = hash => new URL("tools.html" + hash, location.href).href;
+const toolLink = s => toolsURL("#tool-" + encodeURIComponent(svcSlug(s)));
+const myListLink = keys => toolsURL("#my=" + keys.map(findSvc).filter(Boolean).map(s => encodeURIComponent(svcSlug(s))).join(","));
+
+/* 링크 복사 (휴대폰은 공유 시트가 있으면 그걸 먼저 사용) */
+async function shareLink(url, title) {
+  const touch = window.matchMedia("(pointer: coarse)").matches;
+  if (touch && navigator.share) {
+    try { await navigator.share({ title, url }); return; } catch (e) { if (e.name === "AbortError") return; }
+  }
+  try {
+    await navigator.clipboard.writeText(url);
+  } catch (e) {
+    const ta = document.createElement("textarea");
+    ta.value = url; ta.setAttribute("readonly", ""); ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand("copy"); } catch (err) {}
+    ta.remove();
+  }
+  showToast(t("share.copied"));
+}
+
+/* =========================================================
+   7. 아티가 나오는 빈 화면
+   mood: search(갸웃) · fav(하트) · shared(편지) · filter(물음표)
+   ========================================================= */
+function atiEmptyHTML({ mood = "search", title, body, actions = "" }) {
+  const deco = {
+    search: `<span class="ati-q">?</span>`,
+    fav: `<span class="ati-heart h1">♥</span><span class="ati-heart h2">♥</span><span class="ati-heart h3">♥</span>`,
+    shared: `<span class="ati-q">!</span>`,
+    filter: `<span class="ati-q">…</span>`
+  }[mood] || "";
+  return `
+    <div class="empty ati-empty ati-empty--${mood}">
+      <div class="ati-stage" aria-hidden="true"><img src="img/character/ati.png" alt="">${deco}<span class="ati-shadow"></span></div>
+      <h2>${title}</h2>
+      ${body ? `<p>${body}</p>` : ""}
+      ${actions ? `<div class="ati-empty__actions">${actions}</div>` : ""}
+    </div>`;
+}

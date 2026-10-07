@@ -231,7 +231,7 @@ function chatCardsHTML(list, reasons = true) {
       if (KO_FRIENDLY.has(s.name)) tags.push(t("reason.ko"));
       if (!NEEDS_INSTALL.has(s.name)) tags.push(t("reason.web"));
     }
-    return `<article class="chat-card">
+    return `<article class="chat-card" style="--cc:${getCategory(s.cat).color}">
       <div class="chat-card__head">
         ${logoHTML(s)}
         <div class="chat-card__title"><strong>${escH(s.name)}</strong><span>${escH(pick(getSub(s.cat, s.sub).name))}</span></div>

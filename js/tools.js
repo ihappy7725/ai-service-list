@@ -5,10 +5,12 @@
    - 카드 클릭: 공식 사이트 새 탭 / 자세히: 카드 안에서 펼치기
    - 하트: 내 AI 툴(즐겨찾기)
    - 주소: #automation, #automation/nocode, #my(내 AI 툴), #set-student(추천 세트)
+           #new(새로 추가된 툴), #tool-gamma(카드 하나 바로 열기), #my=gamma,notion-ai(공유받은 목록)
    ========================================================= */
 
-const F_DEFAULT = { price: "any", cheap: false, ko: false, kr: false, use: "any", star: false, fav: false };
-const state = { view: "all", cat: "all", sub: "all", q: "", f: { ...F_DEFAULT }, sort: "rec" };
+const F_DEFAULT = { price: "any", cheap: false, ko: false, kr: false, use: "any", star: false, fav: false, fresh: false };
+const state = { view: "all", cat: "all", sub: "all", q: "", f: { ...F_DEFAULT }, sort: "rec", shared: [] };
+let focusKey = null;           // #tool-… 로 들어왔을 때 펼쳐서 보여 줄 카드
 const openCards = new Set();
 let filterOpen = false;
 
@@ -31,8 +33,9 @@ const FILTER_GROUPS = [
     { f: "use", v: "install", label: "filter.use.install" }
   ]},
   { id: "more", title: "filter.g.more", items: [
-    { f: "star", v: true, label: "filter.star", tog: true },
-    { f: "fav",  v: true, label: "filter.fav",  tog: true }
+    { f: "star",  v: true, label: "filter.star",  tog: true },
+    { f: "fresh", v: true, label: "filter.fresh", tog: true },
+    { f: "fav",   v: true, label: "filter.fav",   tog: true }
   ]},
   { id: "sort", title: "filter.g.sort", items: [
     { f: "sort", v: "rec",  label: "sort.rec" },
@@ -65,6 +68,7 @@ function passFilters(s) {
   if (f.use === "install" && !NEEDS_INSTALL.has(s.name)) return false;
   if (f.star && !s.star) return false;
   if (f.fav && !Fav.has(svcKey(s))) return false;
+  if (f.fresh && !isNew(s)) return false;
   return true;
 }
 const activeFilters = () => Object.keys(F_DEFAULT).filter(k => state.f[k] !== F_DEFAULT[k]);
@@ -77,6 +81,18 @@ function readHash() {
   const h = decodeURIComponent(location.hash.replace(/^#/, ""));
   state.view = "all"; state.cat = "all"; state.sub = "all";
   if (h === "my") { state.view = "my"; return; }
+  if (h === "new") { state.view = "new"; return; }
+  if (h.startsWith("my=")) {
+    state.view = "shared";
+    state.shared = [...new Set(h.slice(3).split(",").map(findBySlug).filter(Boolean).map(svcKey))];
+    return;
+  }
+  if (h.startsWith("tool-")) {
+    const s = findBySlug(h.slice(5));
+    if (s) { state.cat = s.cat; focusKey = svcKey(s); openCards.add(focusKey); }
+    else setTimeout(() => showToast(t("share.notFound")), 300);
+    return;
+  }
   if (h.startsWith("set-") && getSet(h.slice(4))) { state.view = "set:" + h.slice(4); return; }
   const [cat, sub] = h.split("/");
   if (CATEGORIES.some(c => c.id === cat)) {
@@ -87,6 +103,8 @@ function readHash() {
 function writeHash() {
   let h = "";
   if (state.view === "my") h = "#my";
+  else if (state.view === "new") h = "#new";
+  else if (state.view === "shared") return;          // 공유 링크 주소는 그대로 둠
   else if (state.view.startsWith("set:")) h = "#set-" + state.view.slice(4);
   else if (state.cat !== "all") h = "#" + state.cat + (state.sub !== "all" ? "/" + state.sub : "");
   history.replaceState(null, "", location.pathname + location.search + h);
@@ -120,7 +138,7 @@ function renderChips() {
   const allOn = state.view === "all" && state.cat === "all";
   const all = `<button type="button" class="chip" data-cat="all" aria-pressed="${allOn}">${t("filter.all")} <small>${SERVICES.length}</small></button>`;
   $("catChips").innerHTML = all + CATEGORIES.map(c => `
-    <button type="button" class="chip" data-cat="${c.id}" aria-pressed="${state.view === "all" && state.cat === c.id}">
+    <button type="button" class="chip" data-cat="${c.id}" style="--cc:${c.color}" aria-pressed="${state.view === "all" && state.cat === c.id}">
       <img src="${c.icon}" alt="">${esc(pick(c.name))}
     </button>`).join("");
 
@@ -130,6 +148,7 @@ function renderChips() {
     $("subChips").innerHTML = "";
   } else {
     const cat = getCategory(state.cat);
+    wrap.style.setProperty("--cc", cat.color);
     const count = subId => SERVICES.filter(s => s.cat === cat.id && (subId === "all" || s.sub === subId) && matches(s, { ignoreSub: true })).length;
     $("subChips").innerHTML =
       `<button type="button" class="subchip" data-sub="all" aria-pressed="${state.sub === "all"}">${t("filter.all")} <small>${count("all")}</small></button>` +
@@ -147,6 +166,8 @@ function itemOn(it) { return it.f === "sort" ? state.sort === it.v : state.f[it.
 function countResults() {
   if (state.view === "my") return Fav.list().map(findSvc).filter(Boolean).filter(s => matches(s)).length;
   if (state.view.startsWith("set:")) return setTools(getSet(state.view.slice(4))).filter(s => matches(s)).length;
+  if (state.view === "new") return newTools().filter(s => matches(s)).length;
+  if (state.view === "shared") return state.shared.map(findSvc).filter(Boolean).filter(s => matches(s)).length;
   return SERVICES.filter(s => matches(s)).length;
 }
 
@@ -189,15 +210,18 @@ function cardHTML(s) {
   const list = arr => arr.map(x => `<li>${esc(x)}</li>`).join("");
   const domain = s.url.replace(/^https?:\/\//, "").replace(/\/$/, "");
   return `
-  <article class="tool${open ? " is-open" : ""}" data-key="${esc(key)}">
+  <article class="tool${open ? " is-open" : ""}" data-key="${esc(key)}" style="--cc:${cat.color}">
     <a class="tool-link" href="${esc(s.url)}" target="_blank" rel="noopener noreferrer" aria-label="${esc(s.name)} · ${t("card.open")}"></a>
     <div class="tool-actions">
+      <button type="button" class="icon-btn share-btn" data-share-tool="${esc(key)}" aria-label="${t("share.tool")}" title="${t("share.tool")}">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1.2 1.2"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1.2-1.2"/></svg>
+      </button>
       ${favBtnHTML(s)}
     </div>
     <div class="tool-head">
       ${logoHTML(s)}
       <div style="min-width:0">
-        <h2 class="tool-name">${esc(s.name)}${s.star ? `<span class="star" title="${t("card.star")}">★</span>` : ""}</h2>
+        <h2 class="tool-name">${esc(s.name)}${s.star ? `<span class="star" title="${t("card.star")}">★</span>` : ""}${isNew(s) ? `<span class="new-badge">NEW</span>` : ""}</h2>
         <div class="tool-cat">${esc(pick(cat.name))} › ${esc(pick(sub.name))}</div>
       </div>
     </div>
@@ -244,6 +268,8 @@ function sortList(list) {
 }
 
 /* ---------- 내 AI 툴 / 추천 세트 머리말 ---------- */
+const shareIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>`;
+
 function renderBanner() {
   const box = $("viewBanner");
   if (state.view === "my") {
@@ -255,7 +281,35 @@ function renderBanner() {
         <h2>${t("my.title")} <small>${Fav.list().length}</small></h2>
         <p>${t("my.sub")}</p>
       </div>
-      <button type="button" class="btn btn-ghost btn-sm" data-view="all">${t("set.close")}</button>`;
+      <div class="view-banner__btns">
+        ${Fav.list().length ? `<button type="button" class="btn btn-primary btn-sm" data-share-my>${shareIcon}${t("share.my")}</button>` : ""}
+        <button type="button" class="btn btn-ghost btn-sm" data-view="all">${t("set.close")}</button>
+      </div>`;
+  } else if (state.view === "new") {
+    box.hidden = false;
+    box.className = "view-banner is-new";
+    box.innerHTML = `
+      <div class="view-banner__text">
+        <span class="eyebrow">WHAT'S NEW · ${LATEST.date.replace(/-/g, ".")}</span>
+        <h2>${t("new.title")} <small>${newTools().length}</small></h2>
+        <p>${t("new.sub")}</p>
+      </div>
+      <div class="view-banner__btns"><button type="button" class="btn btn-ghost btn-sm" data-view="all">${t("set.close")}</button></div>`;
+  } else if (state.view === "shared") {
+    const n = state.shared.length;
+    const allIn = n && state.shared.every(k => Fav.has(k));
+    box.hidden = false;
+    box.className = "view-banner is-shared";
+    box.innerHTML = `
+      <div class="view-banner__text">
+        <span class="eyebrow">SHARED LIST</span>
+        <h2>${t("shared.title")} <small>${n}</small></h2>
+        <p>${t("shared.sub")}</p>
+      </div>
+      <div class="view-banner__btns">
+        ${n ? `<button type="button" class="btn btn-primary btn-sm" data-import-shared ${allIn ? "disabled" : ""}>${allIn ? t("shared.done") : t("shared.import")}</button>` : ""}
+        <button type="button" class="btn btn-ghost btn-sm" data-view="all">${t("set.close")}</button>
+      </div>`;
   } else if (state.view.startsWith("set:")) {
     const set = getSet(state.view.slice(4));
     box.hidden = false;
@@ -288,16 +342,20 @@ function renderGrid() {
   if (state.view === "my") {
     const list = Fav.list().map(findSvc).filter(Boolean).filter(s => matches(s));
     if (!Fav.list().length) {
-      grid.innerHTML = `
-        <div class="empty">
-          <img src="img/character/ati.png" alt="">
-          <h2>${t("my.empty.title")}</h2>
-          <p>${t("my.empty.body")}</p>
-          <button type="button" class="btn btn-primary btn-sm" data-view="all">${t("my.browse")}</button>
-        </div>`;
+      grid.innerHTML = atiEmptyHTML({ mood: "fav", title: t("my.empty.title"), body: t("my.empty.body"),
+        actions: `<button type="button" class="btn btn-primary btn-sm" data-view="all">${t("my.browse")}</button>` });
       return;
     }
     html = sortList(list).map(cardHTML).join("");
+  } else if (state.view === "new") {
+    html = sortList(newTools().filter(s => matches(s))).map(cardHTML).join("");
+  } else if (state.view === "shared") {
+    if (!state.shared.length) {
+      grid.innerHTML = atiEmptyHTML({ mood: "shared", title: t("shared.empty.title"), body: t("shared.empty.body"),
+        actions: `<button type="button" class="btn btn-primary btn-sm" data-view="all">${t("my.browse")}</button>` });
+      return;
+    }
+    html = state.shared.map(findSvc).filter(Boolean).filter(s => matches(s)).map(cardHTML).join("");
   } else if (state.view.startsWith("set:")) {
     const set = getSet(state.view.slice(4));
     set.steps.forEach((st, i) => {
@@ -312,7 +370,7 @@ function renderGrid() {
       CATEGORIES.forEach(c => {
         const items = sortList(list.filter(s => s.cat === c.id));
         if (!items.length) return;
-        html += `<h2 class="group-title">${esc(pick(c.name))} <small>${t("result.count", { n: items.length })}</small></h2>`;
+        html += `<h2 class="group-title" style="--cc:${c.color}">${esc(pick(c.name))} <small>${t("result.count", { n: items.length })}</small></h2>`;
         html += items.map(cardHTML).join("");
       });
     } else if (state.sub === "all") {
@@ -328,13 +386,13 @@ function renderGrid() {
   }
 
   if (!html) {
-    grid.innerHTML = `
-      <div class="empty">
-        <img src="img/3d/cat-research.png" alt="">
-        <h2>${t("empty.title")}</h2>
-        <p>${t("empty.body")}</p>
-        <button type="button" class="btn btn-ghost btn-sm" id="resetBtn">${t("empty.reset")}</button>
-      </div>`;
+    const filtered = activeFilters().length > 0;
+    grid.innerHTML = atiEmptyHTML({
+      mood: state.q ? "search" : "filter",
+      title: state.q ? t("empty.titleQ", { q: esc(state.q) }) : t("empty.title"),
+      body: t(filtered ? "empty.bodyFilter" : "empty.body"),
+      actions: `<button type="button" class="btn btn-ghost btn-sm" id="resetBtn">${t("empty.reset")}</button>
+        <button type="button" class="btn btn-primary btn-sm" data-ask-ati>${t("empty.askAti")}</button>` });
     $("resetBtn").addEventListener("click", resetFilters);
     return;
   }
@@ -346,6 +404,16 @@ function render() {
   renderChips();
   renderBanner();
   renderGrid();
+  if (focusKey) {
+    const key = focusKey; focusKey = null;
+    requestAnimationFrame(() => {
+      const card = document.querySelector(`.tool[data-key="${CSS.escape(key)}"]`);
+      if (!card) return;
+      card.scrollIntoView({ behavior: "smooth", block: "center" });
+      card.classList.add("is-flash");
+      setTimeout(() => card.classList.remove("is-flash"), 2200);
+    });
+  }
 }
 
 function resetFilters() {
@@ -421,6 +489,25 @@ function bindEvents() {
       open ? openCards.add(key) : openCards.delete(key);
       return;
     }
+    const st = e.target.closest("[data-share-tool]");
+    if (st) { e.preventDefault(); const s = findSvc(st.dataset.shareTool); if (s) shareLink(toolLink(s), s.name + " · AI ATLAS"); return; }
+    if (e.target.closest("[data-share-my]")) { shareLink(myListLink(Fav.list()), t("my.title") + " · AI ATLAS"); return; }
+    if (e.target.closest("[data-import-shared]")) {
+      const arr = Fav.list();
+      const add = state.shared.filter(k => !arr.includes(k));
+      Fav.save(arr.concat(add));
+      document.querySelectorAll(".fav-btn").forEach(b => b.setAttribute("aria-pressed", String(Fav.has(b.dataset.fav))));
+      showToast(t("shared.imported", { n: add.length }));
+      renderBanner();
+      return;
+    }
+    if (e.target.closest("[data-ask-ati]")) {
+      if (typeof chatToggle === "function") {
+        chatToggle(true);
+        if (state.q) Chat.el.input.value = state.q;     // 검색어를 아티 입력창에 미리 넣어 두기
+      }
+      return;
+    }
     const view = e.target.closest("[data-view]");
     if (view) { state.view = view.dataset.view; writeHash(); render(); window.scrollTo({ top: 0 }); return; }
     // 세트 경로의 로고를 누르면 해당 카드로 이동
@@ -436,7 +523,7 @@ function bindEvents() {
 
   // 하트를 바꾸면 내 AI 툴 / '내가 담은 툴만' 필터 갱신
   document.addEventListener("favchange", () => {
-    if (state.view === "my") { renderBanner(); renderGrid(); }
+    if (state.view === "my" || state.view === "shared") { renderBanner(); if (state.view === "my") renderGrid(); }
     else if (state.f.fav) renderGrid();
     renderFilters();
   });

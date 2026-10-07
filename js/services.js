@@ -17,7 +17,7 @@
 
 const CATEGORIES = [
   {
-    id: "chatbot", en: "Chatbot", icon: "img/3d/cat-chatbot.png",
+    id: "chatbot", en: "Chatbot", icon: "img/3d/cat-chatbot.png", color: "#2563eb",
     name:  { ko: "종합 AI·챗봇", en: "AI Assistants & Chatbots", ja: "総合AI・チャットボット", zh: "综合AI·聊天机器人" },
     title: { ko: "질문하면 답이 나오는", en: "Ask anything, get answers", ja: "聞けば答えが返ってくる", zh: "有问必答" },
     desc:  { ko: "ChatGPT, Claude처럼 질문, 글쓰기, 분석까지 폭넓게 돕는 AI 비서예요.",
@@ -31,7 +31,7 @@ const CATEGORIES = [
     ]
   },
   {
-    id: "research", en: "Research", icon: "img/3d/cat-research.png",
+    id: "research", en: "Research", icon: "img/3d/cat-research.png", color: "#0d9488",
     name:  { ko: "검색·리서치", en: "Search & Research", ja: "検索・リサーチ", zh: "搜索·调研" },
     title: { ko: "출처까지 찾아주는", en: "Answers with sources", ja: "出典まで探してくれる", zh: "连出处都帮你找" },
     desc:  { ko: "자료 검색, 출처 확인, 논문 탐색, 심층 조사를 돕는 AI예요.",
@@ -45,7 +45,7 @@ const CATEGORIES = [
     ]
   },
   {
-    id: "writing", en: "Writing", icon: "img/3d/cat-writing.png",
+    id: "writing", en: "Writing", icon: "img/3d/cat-writing.png", color: "#6366f1",
     name:  { ko: "글쓰기·번역", en: "Writing & Translation", ja: "文章作成・翻訳", zh: "写作·翻译" },
     title: { ko: "더 잘 쓰고 정확히 옮기는", en: "Write better, translate right", ja: "うまく書いて、正確に訳す", zh: "写得更好，译得更准" },
     desc:  { ko: "블로그·광고 문구 작성, 맞춤법 교정, 번역을 돕는 AI예요.",
@@ -59,7 +59,7 @@ const CATEGORIES = [
     ]
   },
   {
-    id: "image", en: "Image & Design", icon: "img/3d/cat-image.png",
+    id: "image", en: "Image & Design", icon: "img/3d/cat-image.png", color: "#db2777",
     name:  { ko: "이미지·디자인", en: "Image & Design", ja: "画像・デザイン", zh: "图像·设计" },
     title: { ko: "말하면 그려주는", en: "Describe it, see it", ja: "言葉で描いてくれる", zh: "说出来就能画出来" },
     desc:  { ko: "이미지 생성·편집, 로고, 썸네일, 디자인 시안을 만드는 AI예요.",
@@ -75,7 +75,7 @@ const CATEGORIES = [
     ]
   },
   {
-    id: "video", en: "Video", icon: "img/3d/cat-video.png",
+    id: "video", en: "Video", icon: "img/3d/cat-video.png", color: "#ea580c",
     name:  { ko: "영상·애니메이션", en: "Video & Animation", ja: "動画・アニメーション", zh: "视频·动画" },
     title: { ko: "글 한 줄이 영상이 되는", en: "From a line of text to video", ja: "一行の文章が動画になる", zh: "一句话变成视频" },
     desc:  { ko: "영상 생성·편집, AI 아바타, 자막, 모션을 만드는 AI예요.",
@@ -90,7 +90,7 @@ const CATEGORIES = [
     ]
   },
   {
-    id: "audio", en: "Voice & Audio", icon: "img/3d/cat-audio.png",
+    id: "audio", en: "Voice & Audio", icon: "img/3d/cat-audio.png", color: "#16a34a",
     name:  { ko: "음성·오디오", en: "Voice & Audio", ja: "音声・オーディオ", zh: "语音·音频" },
     title: { ko: "목소리를 만들고 다듬는", en: "Create and clean up voices", ja: "声をつくり、整える", zh: "生成并打磨声音" },
     desc:  { ko: "음성 합성, 더빙, 음성 인식, 잡음 제거를 돕는 AI예요.",
@@ -105,7 +105,7 @@ const CATEGORIES = [
     ]
   },
   {
-    id: "music", en: "Music", icon: "img/3d/cat-music.png",
+    id: "music", en: "Music", icon: "img/3d/cat-music.png", color: "#ca8a04",
     name:  { ko: "음악·작곡", en: "Music & Composition", ja: "音楽・作曲", zh: "音乐·作曲" },
     title: { ko: "아이디어가 노래가 되는", en: "Ideas into songs", ja: "アイデアが歌になる", zh: "灵感变成歌曲" },
     desc:  { ko: "노래, 배경음악, 효과음을 만드는 AI예요.",
@@ -120,7 +120,7 @@ const CATEGORIES = [
     ]
   },
   {
-    id: "coding", en: "Coding & Web", icon: "img/3d/cat-coding.png",
+    id: "coding", en: "Coding & Web", icon: "img/3d/cat-coding.png", color: "#dc2626",
     name:  { ko: "코딩·웹 제작", en: "Coding & Web Building", ja: "コーディング・Web制作", zh: "编程·网站制作" },
     title: { ko: "말로 만드는 앱과 웹사이트", en: "Apps and sites from plain words", ja: "言葉でつくるアプリとサイト", zh: "用说的做出应用和网站" },
     desc:  { ko: "코드 작성·수정부터 앱·웹사이트 제작까지 돕는 AI예요.",
@@ -135,7 +135,7 @@ const CATEGORIES = [
     ]
   },
   {
-    id: "productivity", en: "Productivity", icon: "img/3d/cat-productivity.png",
+    id: "productivity", en: "Productivity", icon: "img/3d/cat-productivity.png", color: "#0284c7",
     name:  { ko: "문서·업무 생산성", en: "Docs & Productivity", ja: "ドキュメント・業務効率", zh: "文档·办公效率" },
     title: { ko: "일하는 시간을 줄여주는", en: "Less time on busywork", ja: "仕事の時間を減らしてくれる", zh: "帮你缩短工作时间" },
     desc:  { ko: "발표 자료, 문서, 회의록, 스프레드시트·데이터 분석을 돕는 AI예요.",
@@ -150,7 +150,7 @@ const CATEGORIES = [
     ]
   },
   {
-    id: "automation", en: "Automation & Agents", icon: "img/3d/cat-automation.png",
+    id: "automation", en: "Automation & Agents", icon: "img/3d/cat-automation.png", color: "#9333ea",
     name:  { ko: "자동화·AI 에이전트", en: "Automation & AI Agents", ja: "自動化・AIエージェント", zh: "自动化·AI智能体" },
     title: { ko: "알아서 일하는", en: "Work that runs itself", ja: "自分で動いてくれる", zh: "自己把活干完" },
     desc:  { ko: "서비스 연결, 반복 업무 처리, 여러 단계의 작업 실행을 맡는 AI예요.",

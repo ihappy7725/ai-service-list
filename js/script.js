@@ -58,7 +58,7 @@ const orbit = {
 
 function renderCategoryCards() {
   orbit.box.innerHTML = CATEGORIES.map((c, i) => `
-    <a class="cat-card" href="tools.html#${c.id}" data-i="${i}">
+    <a class="cat-card" href="tools.html#${c.id}" data-i="${i}" style="--cc:${c.color}">
       <div class="cat-card__inner">
         <div class="cat-card__visual">
           <span class="cat-card__num">${String(i + 1).padStart(2, "0")}</span>
@@ -268,12 +268,48 @@ document.addEventListener("click", e => {
   renderSets();
 });
 
+/* ---------- 업데이트 노트 ---------- */
+function renderWhatsNew() {
+  const box = document.getElementById("whatsNew");
+  if (!box) return;
+  const added = newTools();
+  const fmt = d => { const [y, m] = d.split("-"); return currentLang === "en" ? `${["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][+m - 1]} ${y}` : `${y}.${m}`; };
+  const today = LATEST.date.slice(0, 7);
+  box.innerHTML = `
+    <div class="wn-added">
+      <div class="wn-head">
+        <h3>${t("whatsnew.added")} <span class="wn-date">${LATEST.date.replace(/-/g, ".")}</span></h3>
+        <span class="wn-count">${t("whatsnew.count", { a: added.length, r: LATEST.removed.length })}</span>
+      </div>
+      <div class="wn-grid">
+        ${added.slice(0, 8).map(s => {
+          const c = getCategory(s.cat);
+          return `<a class="wn-card" href="tools.html#tool-${encodeURIComponent(svcSlug(s))}" style="--cc:${c.color}">
+            ${logoHTML(s)}
+            <span class="wn-card__text"><strong>${s.name}</strong><small>${pick(c.name)}</small></span>
+            <span class="new-badge">NEW</span>
+          </a>`;
+        }).join("")}
+      </div>
+      <a class="btn btn-primary btn-sm" href="tools.html#new">${t("whatsnew.all")} →</a>
+    </div>
+    <div class="wn-removed">
+      <h3>${t("whatsnew.removed")}</h3>
+      <ul>
+        ${LATEST.removed.slice().sort((a, b) => b.ended.localeCompare(a.ended)).map(r => `
+          <li><s>${r.name}</s><span>${t(r.ended > today ? "whatsnew.willEnd" : "whatsnew.ended", { d: fmt(r.ended) })}</span></li>`).join("")}
+      </ul>
+      <img class="wn-ati" src="img/character/ati.png" alt="" aria-hidden="true">
+    </div>`;
+}
+
 /* ---------- 언어가 바뀌면 다시 그리기 ---------- */
 function renderTexts() {
   document.getElementById("heroSub").textContent =
     t("hero.sub", { c: CATEGORIES.length, n: SERVICES.length });
   renderCategoryCards();
   renderSets();
+  renderWhatsNew();
   renderFeatures();
 }
 
