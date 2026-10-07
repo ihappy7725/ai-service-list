@@ -26,10 +26,16 @@
       <nav class="main-nav" aria-label="주 메뉴">
         <a href="tools.html" aria-current="page" data-i18n="nav.tools">AI 툴 목록</a>
         <a href="index.html#categories" data-i18n="nav.categories">분야 소개</a>
+        <a href="index.html#sets" data-i18n="nav.sets">추천 세트</a>
         <a href="index.html#features" data-i18n="nav.features">기능</a>
         <a href="index.html#trust" data-i18n="nav.trust">리서치 기준</a>
       </nav>
       <div class="header-actions">
+        <a class="lang-btn my-btn" href="tools.html#my">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-7.5-4.6-9.6-9.2C.9 7.9 3.1 4.5 6.6 4.5c2.1 0 3.6 1.2 5.4 3.2 1.8-2 3.3-3.2 5.4-3.2 3.5 0 5.7 3.4 4.2 6.8-2.1 4.6-9.6 9.2-9.6 9.2z"/></svg>
+          <span class="my-label" data-i18n="nav.my">내 AI 툴</span>
+          <span class="my-count" hidden>0</span>
+        </a>
         <div class="lang">
           <button type="button" class="lang-btn" aria-haspopup="true" aria-expanded="false" data-i18n-aria="lang.label">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>
@@ -37,7 +43,7 @@
           </button>
           <ul class="lang-menu" role="menu" hidden></ul>
         </div>
-        <a class="btn btn-ghost btn-sm" href="index.html" data-i18n="btn.home">홈으로</a>
+        <a class="btn btn-ghost btn-sm home-btn" href="index.html" data-i18n="btn.home">홈으로</a>
         <button type="button" class="menu-btn" aria-expanded="false" data-i18n-aria="nav.menu"><span></span></button>
       </div>
     </div>
@@ -61,11 +67,14 @@
   <div class="controls">
     <div class="container">
       <div class="controls-row">
+        <div class="search-row">
         <div class="search" role="search">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
           <label for="q" class="sr-only" data-i18n="search.ph"></label>
           <input id="q" type="search" autocomplete="off" data-i18n-ph="search.ph">
           <button type="button" class="search-clear" id="qClear" hidden data-i18n-aria="search.clear">×</button>
+        </div>
+        <div class="conds" id="condChips" role="group" data-i18n-aria="cond.label"></div>
         </div>
         <div class="chips" id="catChips" role="group" data-i18n-aria="filter.cat"></div>
       </div>
@@ -77,8 +86,13 @@
 
   <!-- ===== 카드 목록 ===== -->
   <main class="tools-main container">
+    <section class="view-banner" id="viewBanner" hidden></section>
     <div class="grid" id="grid"></div>
   </main>
+
+  <!-- 비교함 / 비교표 -->
+  <div class="cmp-tray" id="cmpTray" hidden></div>
+  <div class="modal" id="cmpModal" hidden></div>
 
   <footer class="site-footer">
     <div class="container">
@@ -109,6 +123,8 @@
 
   <script src="js/services.js"></script>
   <script src="js/i18n.js"></script>
+  <script src="js/features.js"></script>
+  <script src="js/chatbot.js"></script>
   <script src="js/tools.js"></script>
 </body>
 </html>

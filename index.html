@@ -29,10 +29,16 @@
       <nav class="main-nav" aria-label="주 메뉴">
         <a href="tools.html" data-i18n="nav.tools">AI 툴 목록</a>
         <a href="#categories" data-i18n="nav.categories">분야 소개</a>
+        <a href="#sets" data-i18n="nav.sets">추천 세트</a>
         <a href="#features" data-i18n="nav.features">기능</a>
         <a href="#trust" data-i18n="nav.trust">리서치 기준</a>
       </nav>
       <div class="header-actions">
+        <a class="lang-btn my-btn" href="tools.html#my">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-7.5-4.6-9.6-9.2C.9 7.9 3.1 4.5 6.6 4.5c2.1 0 3.6 1.2 5.4 3.2 1.8-2 3.3-3.2 5.4-3.2 3.5 0 5.7 3.4 4.2 6.8-2.1 4.6-9.6 9.2-9.6 9.2z"/></svg>
+          <span class="my-label" data-i18n="nav.my">내 AI 툴</span>
+          <span class="my-count" hidden>0</span>
+        </a>
         <div class="lang">
           <button type="button" class="lang-btn" aria-haspopup="true" aria-expanded="false" data-i18n-aria="lang.label">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>
@@ -76,11 +82,20 @@
           <p class="section-sub" data-i18n="cat.sub">스크롤하면 분야 카드가 차례로 넘어와요.</p>
         </div>
         <div class="cat-orbit" id="catOrbit"></div>
-        <div class="cat-progress" aria-hidden="true">
-          <span id="catIndex">01 / 10</span>
-          <span class="cat-progress__bar"><i id="catBar"></i></span>
-          <span class="cat-progress__name" id="catName"></span>
-        </div>
+        <div class="cat-progress" aria-hidden="true"><span class="cat-progress__bar"><i id="catBar"></i></span></div>
+      </div>
+    </section>
+
+    <!-- ===== 2-1. 상황별 추천 세트 ===== -->
+    <section class="sets container" id="sets" aria-labelledby="setsTitle">
+      <div class="section-head reveal">
+        <span class="eyebrow" data-i18n="sets.eyebrow">USE CASES</span>
+        <h2 class="section-title" id="setsTitle" data-i18n="sets.title">상황별 추천 세트</h2>
+        <p class="section-sub" data-i18n="sets.sub"></p>
+      </div>
+      <div class="sets-board reveal">
+        <div class="sets-tabs" id="setTabs" role="tablist"></div>
+        <div class="sets-panel" id="setPanel" role="tabpanel"></div>
       </div>
     </section>
 
@@ -161,6 +176,8 @@
 
   <script src="js/services.js"></script>
   <script src="js/i18n.js"></script>
+  <script src="js/features.js"></script>
+  <script src="js/chatbot.js"></script>
   <script src="js/script.js"></script>
 </body>
 </html>

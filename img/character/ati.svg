@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="400" height="400">
+<defs>
+ <radialGradient id="body" cx=".36" cy=".3" r=".8">
+  <stop offset="0" stop-color="#d6ecff"/><stop offset=".35" stop-color="#6db8ff"/><stop offset=".75" stop-color="#2a74ef"/><stop offset="1" stop-color="#0b3fbf"/>
+ </radialGradient>
+ <linearGradient id="visor" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#16285a"/><stop offset="1" stop-color="#0a1638"/>
+ </linearGradient>
+ <radialGradient id="eye" cx=".5" cy=".4" r=".7"><stop offset="0" stop-color="#ffffff"/><stop offset=".6" stop-color="#9ff2ff"/><stop offset="1" stop-color="#4cd3ff"/></radialGradient>
+ <radialGradient id="glow" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#fff"/><stop offset=".5" stop-color="#bfe6ff"/><stop offset="1" stop-color="#bfe6ff" stop-opacity="0"/></radialGradient>
+ <filter id="soft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="3"/></filter>
+</defs>
+<ellipse cx="100" cy="181" rx="46" ry="7" fill="#1f5fd0" opacity=".18" filter="url(#soft)"/>
+<!-- 궤도 고리 (뒤) -->
+<path d="M26 146 A76 20 -10 0 1 174 120" fill="none" stroke="#9fd0ff" stroke-width="5" stroke-linecap="round" opacity=".55"/>
+<!-- 안테나 -->
+<path d="M100 44 V28" stroke="#2a74ef" stroke-width="5" stroke-linecap="round"/>
+<circle cx="100" cy="22" r="11" fill="url(#glow)"/>
+<path d="M100 14 C101.5 19 103 20.5 108 22 C103 23.5 101.5 25 100 30 C98.5 25 97 23.5 92 22 C97 20.5 98.5 19 100 14Z" fill="#fff"/>
+<!-- 몸통(지구본) -->
+<circle cx="100" cy="104" r="62" fill="url(#body)"/>
+<path d="M100 42 C78 62 72 146 100 166 M100 42 C122 62 128 146 100 166" fill="none" stroke="#fff" stroke-opacity=".18" stroke-width="2"/>
+<ellipse cx="78" cy="68" rx="22" ry="12" transform="rotate(-28 78 68)" fill="#fff" opacity=".55"/>
+<!-- 얼굴 화면 -->
+<rect x="56" y="80" width="88" height="54" rx="27" fill="url(#visor)"/>
+<rect x="60" y="83" width="80" height="16" rx="8" fill="#fff" opacity=".07"/>
+<rect x="74" y="95" width="15" height="22" rx="7.5" fill="url(#eye)"/>
+<rect x="111" y="95" width="15" height="22" rx="7.5" fill="url(#eye)"/>
+<path d="M93 122 Q100 128 107 122" fill="none" stroke="#9ff2ff" stroke-width="3.5" stroke-linecap="round"/>
+<ellipse cx="66" cy="120" rx="5" ry="3" fill="#ff9ec7" opacity=".55"/>
+<ellipse cx="134" cy="120" rx="5" ry="3" fill="#ff9ec7" opacity=".55"/>
+<!-- 궤도 고리 (앞) -->
+<path d="M174 120 A76 20 -10 0 1 26 146" fill="none" stroke="#e6f4ff" stroke-width="5" stroke-linecap="round"/>
+<circle cx="150" cy="140" r="7" fill="#fff"/>
+<circle cx="150" cy="140" r="3" fill="#4aa3ff"/>
+</svg>

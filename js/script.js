@@ -121,10 +121,7 @@ function layoutOrbit() {
   });
 
   const n = CATEGORIES.length;
-  document.getElementById("catIndex").textContent =
-    `${String(activeIndex + 1).padStart(2, "0")} / ${String(n).padStart(2, "0")}`;
-  document.getElementById("catBar").style.width = `${((orbit.offset + 1) / n) * 100}%`;
-  document.getElementById("catName").textContent = pick(CATEGORIES[activeIndex].name);
+  document.getElementById("catBar").style.height = `${((orbit.offset + 1) / n) * 100}%`;
 }
 
 function onOrbitScroll() {
@@ -236,11 +233,47 @@ function observeReveal(nodes) {
   nodes.forEach(n => revealObserver.observe(n));
 }
 
+/* ---------- 상황별 추천 세트 (지도처럼 경로로 보여주기) ---------- */
+let activeSet = SETS[0].id;
+function renderSets() {
+  const tabs = document.getElementById("setTabs");
+  const panel = document.getElementById("setPanel");
+  if (!tabs) return;
+  tabs.innerHTML = SETS.map(set => `
+    <button type="button" role="tab" class="set-tab" data-set="${set.id}" aria-selected="${set.id === activeSet}">
+      <img src="${set.icon}" alt="">
+      <span><strong>${pick(set.title)}</strong><small>${t("sets.count", { n: setTools(set).length })}</small></span>
+    </button>`).join("");
+  const set = getSet(activeSet);
+  panel.innerHTML = `
+    <div class="set-panel__head">
+      <h3>${pick(set.title)}</h3>
+      <p>${pick(set.desc)}</p>
+    </div>
+    <ol class="route route--big">
+      ${set.steps.map((st, i) => `
+        <li>
+          <span class="route__num">${i + 1}</span>
+          <span class="route__name">${pick(st.name)}</span>
+          <span class="route__tools">${st.tools.map(findByName).filter(Boolean).map(s => `
+            <a class="route__tool" href="${s.url}" target="_blank" rel="noopener noreferrer">${logoHTML(s)}<span>${s.name}</span></a>`).join("")}</span>
+        </li>`).join("")}
+    </ol>
+    <a class="btn btn-primary btn-sm" href="tools.html#set-${set.id}">${t("sets.viewAll")} →</a>`;
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest(".set-tab");
+  if (!b) return;
+  activeSet = b.dataset.set;
+  renderSets();
+});
+
 /* ---------- 언어가 바뀌면 다시 그리기 ---------- */
 function renderTexts() {
   document.getElementById("heroSub").textContent =
     t("hero.sub", { c: CATEGORIES.length, n: SERVICES.length });
   renderCategoryCards();
+  renderSets();
   renderFeatures();
 }
 
